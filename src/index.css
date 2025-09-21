@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* EcoLCA Design System - AI-Powered Life Cycle Assessment Platform
+Eco-friendly green theme with modern gradients and sustainable colors
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 220 15% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+
+    /* Primary eco-green palette */
+    --primary: 142 70% 45%;
+    --primary-light: 142 60% 55%;
+    --primary-dark: 142 80% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary earth tones */
+    --secondary: 45 25% 95%;
+    --secondary-foreground: 220 15% 20%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 15% 55%;
+
+    --accent: 180 50% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Success/Circularity green */
+    --success: 120 60% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning/Energy yellow */
+    --warning: 48 90% 55%;
+    --warning-foreground: 220 15% 20%;
+
+    /* Destructive/Emissions red */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 142 30% 85%;
+    --input: 142 30% 90%;
+    --ring: 142 70% 45%;
+
+    --radius: 0.75rem;
+
+    /* Eco gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-light)) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(142 70% 45%) 0%, hsl(180 50% 50%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(142 20% 97%) 100%);
+    
+    /* Shadows */
+    --shadow-eco: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 2px 10px -2px hsl(0 0% 0% / 0.08);
+
+    /* Sidebar eco theme */
+    --sidebar-background: 142 25% 96%;
+    --sidebar-foreground: 220 15% 25%;
+    --sidebar-primary: 142 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 30% 90%;
+    --sidebar-accent-foreground: 220 15% 25%;
+    --sidebar-border: 142 30% 85%;
+    --sidebar-ring: 142 70% 45%;
+  }
+
+  .dark {
+    --background: 220 15% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 220 15% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 220 15% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 142 60% 55%;
+    --primary-light: 142 50% 65%;
+    --primary-dark: 142 70% 45%;
+    --primary-foreground: 220 15% 8%;
+
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 15% 65%;
+
+    --accent: 180 40% 60%;
+    --accent-foreground: 220 15% 8%;
+
+    --success: 120 50% 60%;
+    --success-foreground: 220 15% 8%;
+
+    --warning: 48 80% 65%;
+    --warning-foreground: 220 15% 8%;
+
+    --destructive: 0 65% 65%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 142 60% 55%;
+
+    --sidebar-background: 220 15% 12%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 142 60% 55%;
+    --sidebar-primary-foreground: 220 15% 8%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 142 60% 55%;
+  }
+}
+
+
+@layer components {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .shadow-eco {
+    box-shadow: var(--shadow-eco);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

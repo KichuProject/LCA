@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoLCA - AI-Powered Life Cycle Assessment Platform</title>
+    <meta name="description" content="Advanced AI-powered Life Cycle Assessment platform for metals with circularity focus. Optimize environmental impact and maximize Return on Circularity (ROC) for sustainable production." />
+    <meta name="author" content="EcoLCA Platform" />
+
+    <meta property="og:title" content="EcoLCA - AI-Powered Life Cycle Assessment Platform" />
+    <meta property="og:description" content="Advanced AI-powered Life Cycle Assessment platform for metals with circularity focus. Optimize environmental impact and maximize Return on Circularity (ROC) for sustainable production." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  </head>
+
+  <body>
+    <script>
+      // Apply theme immediately before React renders to prevent flash
+      (function() {
+        const savedSettings = localStorage.getItem('lcaSettings');
+        if (savedSettings) {
+          try {
+            const settings = JSON.parse(savedSettings);
+            if (settings.theme === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+          } catch (e) {
+            // If parsing fails, default to light theme
+          }
+        }
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

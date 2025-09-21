@@ -1,0 +1,490 @@
+/* Dark Mode with LCA Green Theme */
+.dark {
+  /* Background colors */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  
+  /* Card backgrounds */
+  --card: 222.2 84% 6%;
+  --card-foreground: 210 40% 98%;
+  
+  /* Popover backgrounds */
+  --popover: 222.2 84% 6%;
+  --popover-foreground: 210 40% 98%;
+  
+  /* Primary LCA Green colors */
+  --primary: 142 76% 36%; /* LCA Green */
+  --primary-foreground: 210 40% 98%;
+  
+  /* Secondary colors */
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  
+  /* Muted colors */
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  
+  /* Accent colors with green tint */
+  --accent: 142 76% 36%;
+  --accent-foreground: 210 40% 98%;
+  
+  /* Destructive colors */
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  
+  /* Border and input */
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 142 76% 36%; /* LCA Green ring */
+  
+  /* Success colors */
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+}
+
+/* Dark mode body styling */
+.dark body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Text visibility improvements */
+.dark .text-muted-foreground {
+  color: hsl(215 20.2% 65.1%) !important;
+}
+
+.dark .text-foreground {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Primary button with LCA green */
+.dark .bg-primary {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+}
+
+.dark .bg-primary:hover {
+  background-color: hsl(142 76% 32%) !important;
+}
+
+/* Outline button with LCA green border */
+.dark button[variant="outline"],
+.dark .variant-outline {
+  background-color: transparent !important;
+  border: 1px solid hsl(142 76% 36%) !important;
+  color: hsl(142 76% 45%) !important;
+}
+
+.dark button[variant="outline"]:hover,
+.dark .variant-outline:hover {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+  border-color: hsl(142 76% 36%) !important;
+}
+
+/* Destructive/Delete buttons - bright red like light mode */
+.dark .bg-destructive,
+.dark button[variant="destructive"] {
+  background-color: hsl(0 84.2% 60.2%) !important;
+  color: white !important;
+}
+
+.dark .bg-destructive:hover,
+.dark button[variant="destructive"]:hover {
+  background-color: hsl(0 84.2% 55%) !important;
+  color: white !important;
+}
+
+/* Make destructive text bright red like light mode */
+.dark .text-destructive {
+  color: hsl(0 84% 60%) !important;
+}
+
+.dark .text-destructive:hover {
+  color: hsl(0 84% 65%) !important;
+}
+
+/* Ensure all destructive elements are bright red */
+.dark .text-destructive,
+.dark .text-destructive *,
+.dark .text-destructive .lucide,
+.dark .text-destructive .lucide-trash2 {
+  color: hsl(0 84% 60%) !important;
+}
+
+.dark .text-destructive:hover,
+.dark .text-destructive:hover *,
+.dark .text-destructive:hover .lucide {
+  color: hsl(0 84% 65%) !important;
+}
+
+/* Force logo and icon colors to be visible in dark mode */
+.dark .text-primary {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .text-primary .lucide {
+  color: hsl(142 76% 36%) !important;
+}
+
+/* Override inline styles for navigation icons */
+.dark nav .lucide[style] {
+  color: rgb(0, 200, 83) !important; /* Dashboard - Green */
+}
+
+.dark nav .lucide-calculator[style] {
+  color: rgb(41, 121, 255) !important; /* LCA Input - Blue */
+}
+
+.dark nav .lucide-file-text[style] {
+  color: rgb(255, 109, 0) !important; /* Reports - Orange */
+}
+
+.dark nav .lucide-message-circle[style] {
+  color: rgb(213, 0, 249) !important; /* AI Chatbot - Purple */
+}
+
+.dark nav .lucide-settings[style] {
+  color: rgb(69, 90, 100) !important; /* Settings - Gray */
+}
+
+.dark nav .lucide-house[style] {
+  color: rgb(0, 200, 83) !important; /* Dashboard - Green */
+}
+
+/* General icon override for any missed icons */
+.dark .lucide {
+  color: inherit !important;
+}
+
+/* Specific icon colors for different contexts */
+.dark .lucide-database {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-calculator:not([style]) {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-file-bar-chart {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-palette {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-settings:not([style]) {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-save {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-refresh-cw {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-bar-chart-3 {
+  color: hsl(142 76% 36%) !important;
+}
+
+.dark .lucide-globe {
+  color: hsl(142 76% 36%) !important;
+}
+
+/* Navigation and header icons */
+.dark nav .lucide,
+.dark .nav .lucide,
+.dark header .lucide,
+.dark .header .lucide {
+  color: inherit !important;
+}
+
+/* Secondary button styling */
+.dark button[variant="secondary"],
+.dark .variant-secondary {
+  background-color: hsl(217.2 32.6% 20%) !important;
+  color: hsl(210 40% 90%) !important;
+  border: 1px solid hsl(217.2 32.6% 25%) !important;
+}
+
+.dark button[variant="secondary"]:hover,
+.dark .variant-secondary:hover {
+  background-color: hsl(217.2 32.6% 25%) !important;
+}
+
+/* Card styling with gradient */
+.dark .gradient-card {
+  background: linear-gradient(135deg, hsl(222.2 84% 6%) 0%, hsl(217.2 32.6% 17.5%) 100%) !important;
+  border: 1px solid hsl(217.2 32.6% 25%) !important;
+}
+
+.dark .shadow-eco {
+  box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1), 0 2px 4px -1px rgba(34, 197, 94, 0.06) !important;
+}
+
+/* Badge styling with LCA green accents */
+.dark .bg-success\/5 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.dark .border-success\/20 {
+  border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+.dark .bg-success {
+  background-color: hsl(142 76% 36%) !important;
+}
+
+/* Status indicators */
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .bg-blue-500 {
+  background-color: hsl(217 91% 60%) !important;
+}
+
+/* Input and form controls */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Tab styling with LCA green active state */
+.dark [data-state="active"] {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+}
+
+/* Switch component with LCA green */
+.dark .bg-input {
+  background-color: hsl(var(--input)) !important;
+}
+
+.dark [data-state="checked"] {
+  background-color: hsl(142 76% 36%) !important;
+}
+
+/* Gradient text for headers */
+.dark .bg-gradient-to-r {
+  background: linear-gradient(to right, hsl(142 76% 36%), hsl(217 91% 60%)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+
+
+
+/* Additional button rules to ensure bright red delete buttons */
+.dark button.text-destructive,
+.dark .btn-destructive,
+.dark [data-destructive="true"] {
+  color: hsl(0 84% 60%) !important;
+}
+
+.dark button.text-destructive:hover,
+.dark .btn-destructive:hover,
+.dark [data-destructive="true"]:hover {
+  color: hsl(0 84% 65%) !important;
+}
+
+/* Force all button text with destructive class to be bright red */
+.dark button .text-destructive,
+.dark button.text-destructive svg,
+.dark .text-destructive button svg {
+  color: hsl(0 84% 60%) !important;
+}
+
+.dark button .text-destructive:hover,
+.dark button.text-destructive:hover svg,
+.dark .text-destructive:hover button svg {
+  color: hsl(0 84% 65%) !important;
+}
+
+/* Button hover effects in dark mode */
+.dark button:not([variant="outline"]):not([variant="destructive"]):hover {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Secondary button styling */
+.dark .bg-secondary {
+  background-color: hsl(217.2 32.6% 20%) !important;
+  color: hsl(210 40% 85%) !important;
+}
+
+.dark .bg-secondary:hover {
+  background-color: hsl(217.2 32.6% 25%) !important;
+  color: hsl(210 40% 90%) !important;
+}
+
+/* Muted button styling */
+.dark .bg-muted {
+  background-color: hsl(217.2 32.6% 17.5%) !important;
+  color: hsl(210 40% 85%) !important;
+}
+
+.dark .bg-muted:hover {
+  background-color: hsl(217.2 32.6% 22%) !important;
+  color: hsl(210 40% 90%) !important;
+}
+
+/* Ensure proper contrast for all interactive elements */
+.dark .text-primary {
+  color: hsl(142 76% 45%) !important;
+}
+
+.dark .border-primary {
+  border-color: hsl(142 76% 36%) !important;
+}
+
+/* Loading and status indicators */
+.dark .animate-spin {
+  color: hsl(142 76% 36%) !important;
+}
+
+/* Scrollbar styling for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(222.2 84% 6%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(142 76% 36%);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(142 76% 32%);
+}
+
+/* Additional visibility improvements */
+.dark .bg-muted {
+  background-color: hsl(217.2 32.6% 17.5%) !important;
+  color: hsl(210 40% 85%) !important;
+}
+
+.dark .text-primary {
+  color: hsl(142 76% 55%) !important;
+}
+
+.dark .border {
+  border-color: hsl(217.2 32.6% 25%) !important;
+}
+
+.dark .bg-primary\/10 {
+  background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.dark .border-primary\/20 {
+  border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+/* Icon colors in dark mode */
+.dark svg {
+  color: inherit !important;
+}
+
+.dark .text-muted-foreground svg {
+  color: hsl(215 20.2% 65.1%) !important;
+}
+
+/* Ensure button icons are visible */
+.dark button svg {
+  color: currentColor !important;
+}
+
+/* Tab styling improvements */
+.dark [data-state="active"] {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+}
+
+.dark [data-state="inactive"] {
+  color: hsl(210 40% 75%) !important;
+}
+
+.dark [data-state="inactive"]:hover {
+  color: hsl(210 40% 85%) !important;
+  background-color: hsl(217.2 32.6% 20%) !important;
+}
+
+/* Select component improvements */
+.dark [role="option"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [role="option"]:hover {
+  background-color: hsl(142 76% 36%) !important;
+  color: white !important;
+}
+
+/* Badge improvements */
+.dark .bg-secondary {
+  background-color: hsl(217.2 32.6% 20%) !important;
+  color: hsl(210 40% 85%) !important; /* Moderate badge text */
+}
+
+/* Description text improvements */
+.dark .text-muted-foreground {
+  color: hsl(215 20.2% 65.1%) !important;
+}
+
+/* Card descriptions should be readable */
+.dark .text-card-foreground {
+  color: hsl(210 40% 80%) !important;
+}
+
+/* Form labels moderate brightness */
+.dark .font-medium {
+  color: hsl(210 40% 88%) !important;
+}
+
+/* FINAL OVERRIDE - Ensure delete buttons are bright red in dark mode */
+.dark button.text-destructive,
+.dark .text-destructive,
+.dark .text-destructive *,
+.dark .text-destructive svg,
+.dark .text-destructive .lucide,
+.dark .text-destructive .lucide-trash2,
+.dark button .text-destructive,
+.dark button.text-destructive svg,
+.dark .gap-2.text-destructive,
+.dark .gap-1.text-destructive {
+  color: hsl(0 84% 60%) !important;
+}
+
+.dark button.text-destructive:hover,
+.dark .text-destructive:hover,
+.dark .text-destructive:hover *,
+.dark .text-destructive:hover svg,
+.dark .text-destructive:hover .lucide,
+.dark .text-destructive:hover .lucide-trash2,
+.dark button .text-destructive:hover,
+.dark button.text-destructive:hover svg,
+.dark .gap-2.text-destructive:hover,
+.dark .gap-1.text-destructive:hover {
+  color: hsl(0 84% 65%) !important;
+}
