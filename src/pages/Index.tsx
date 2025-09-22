@@ -288,6 +288,10 @@ const Index = () => {
               <Plus className="w-4 h-4" />
               New LCA Analysis
             </Button>
+            <Button className="w-full justify-start gap-2 bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100" onClick={() => navigate('/geo-mapping')}>
+              <Globe className="w-4 h-4" />
+              Geo-Mapping Impact
+            </Button>
             <Button className="w-full justify-start gap-2" variant="outline" onClick={() => navigate('/ai-chatbot')}>
               <Brain className="w-4 h-4" />
               AI Auto-complete

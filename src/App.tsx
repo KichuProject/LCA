@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import Index from "./pages/Index";
 import LCAInput from "./pages/LCAInput";
+import GeoMapping from "./pages/GeoMapping";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -45,6 +46,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/lca-input" element={<LCAInput />} />
+                <Route path="/geo-mapping" element={<GeoMapping />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/ai-chatbot" element={<AIChatbot />} />

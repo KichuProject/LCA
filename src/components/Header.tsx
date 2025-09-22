@@ -1,13 +1,14 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Download, Plus, Home, Calculator, FileText, Settings, Leaf, MessageCircle, Menu } from "lucide-react";
+import { Download, Plus, Home, Calculator, FileText, Settings, Leaf, MessageCircle, Menu, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 // Brighter, more vibrant colors for icons
 const navItems = [
   { title: "Dashboard", url: "/", icon: Home, color: "#00C853" },
-  { title: "LCA Input", url: "/lca-input", icon: Calculator, color: "#2979FF" },
+  { title: "LCA Analysis", url: "/lca-input", icon: Calculator, color: "#2979FF" },
+  { title: "Geo-Mapping", url: "/geo-mapping", icon: MapPin, color: "#00BCD4" },
   { title: "Reports", url: "/reports", icon: FileText, color: "#FF6D00" },
   { title: "AI Chatbot", url: "/ai-chatbot", icon: MessageCircle, color: "#D500F9" },
   { title: "Settings", url: "/settings", icon: Settings, color: "#455A64" },

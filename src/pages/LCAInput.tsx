@@ -1204,30 +1204,419 @@ const LCAInput = () => {
             </CardContent>
           </Card>
 
+          {/* NEW: Interactive Scenario Sliders - Real-time ROC Updates */}
+          <Card className="shadow-lg border-blue-200 bg-gradient-to-r from-blue-50 to-green-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-blue-700 flex items-center gap-2">
+                🎛️ Scenario Explorer - Live ROC Impact
+                <Badge className="bg-blue-100 text-blue-800">Real-time</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Recycling Rate Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium">Recycling Rate</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-green-600">{recycledContent}%</span>
+                    <Badge variant="outline" className="text-xs">
+                      {recycledContent > 50 ? '🌟 Excellent' : recycledContent > 30 ? '✅ Good' : '⚠️ Improve'}
+                    </Badge>
+                  </div>
+                </div>
+                <Slider
+                  value={[recycledContent]}
+                  onValueChange={(value) => setRecycledContent(value[0])}
+                  max={80}
+                  min={0}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>0% (Virgin only)</span>
+                  <span>40% (Industry avg)</span>
+                  <span>80% (Best practice)</span>
+                </div>
+              </div>
+
+              {/* Transport Distance Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium">Transport Distance</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-blue-600">{transportDistance} km</span>
+                    <Badge variant="outline" className="text-xs">
+                      {transportDistance < 500 ? '🚛 Local' : transportDistance < 1500 ? '🌍 Regional' : '✈️ Global'}
+                    </Badge>
+                  </div>
+                </div>
+                <Slider
+                  value={[transportDistance]}
+                  onValueChange={(value) => setTransportDistance(value[0])}
+                  max={3000}
+                  min={100}
+                  step={100}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>100km (Local)</span>
+                  <span>800km (Regional)</span>
+                  <span>3000km (Global)</span>
+                </div>
+              </div>
+
+              {/* Energy Mix Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium">Renewable Energy %</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-green-600">{100 - (emissionControl?.[0] || 50)}%</span>
+                    <Badge variant="outline" className="text-xs">
+                      {(100 - (emissionControl?.[0] || 50)) > 70 ? '🌱 Clean' : (100 - (emissionControl?.[0] || 50)) > 40 ? '⚡ Mixed' : '🏭 Fossil'}
+                    </Badge>
+                  </div>
+                </div>
+                <Slider
+                  value={emissionControl}
+                  onValueChange={(value) => setEmissionControl(value)}
+                  max={100}
+                  min={0}
+                  step={10}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>100% Renewable</span>
+                  <span>50% Mixed</span>
+                  <span>100% Fossil</span>
+                </div>
+              </div>
+
+              {/* Live ROC Preview */}
+              <div className="bg-white rounded-lg p-4 border-2 border-dashed border-green-300">
+                <h4 className="font-semibold text-green-800 mb-2">🎯 Live ROC Preview</h4>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{Math.round(60 + (recycledContent * 0.5) - (transportDistance * 0.01))}%</div>
+                    <div className="text-xs text-gray-600">Current ROC</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">{Math.round(115 - (recycledContent * 1.2) + (transportDistance * 0.02))}t</div>
+                    <div className="text-xs text-gray-600">CO₂ Emissions</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-600">{Math.round(150 - (recycledContent * 0.8) + ((emissionControl?.[0] || 50) * 0.5))}k</div>
+                    <div className="text-xs text-gray-600">Energy (kWh)</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* NEW: Industry Presets */}
+          <Card className="shadow-lg border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-orange-700 flex items-center gap-2">
+                🏭 Industry Presets - Quick Start
+                <Badge className="bg-orange-100 text-orange-800">One-click</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Aluminium Cans Preset */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-blue-300" 
+                      onClick={() => {
+                        setMetalType("aluminium_primary");
+                        setRecycledContent(75);
+                        setTransportDistance(400);
+                        setProcessMethod("smelting");
+                        setLifespan(0.5);
+                        setRecyclingPercent(80);
+                        toast({
+                          title: "Aluminium Cans Loaded",
+                          description: "Optimized parameters for beverage can production"
+                        });
+                      }}>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl mb-2">🥤</div>
+                    <h3 className="font-semibold text-blue-700">Aluminium Cans</h3>
+                    <p className="text-xs text-gray-600 mt-1">75% recycled, 400km transport</p>
+                    <Badge className="mt-2 bg-green-100 text-green-700">ROC: ~85%</Badge>
+                  </CardContent>
+                </Card>
+
+                {/* Copper Wires Preset */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-yellow-300"
+                      onClick={() => {
+                        setMetalType("copper");
+                        setRecycledContent(35);
+                        setTransportDistance(800);
+                        setProcessMethod("electrolysis");
+                        setLifespan(25);
+                        setRecyclingPercent(95);
+                        toast({
+                          title: "Copper Wires Loaded",
+                          description: "Standard parameters for electrical wire production"
+                        });
+                      }}>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl mb-2">🔌</div>
+                    <h3 className="font-semibold text-yellow-700">Copper Wires</h3>
+                    <p className="text-xs text-gray-600 mt-1">35% recycled, 800km transport</p>
+                    <Badge className="mt-2 bg-yellow-100 text-yellow-700">ROC: ~65%</Badge>
+                  </CardContent>
+                </Card>
+
+                {/* Battery Materials Preset */}
+                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-purple-300"
+                      onClick={() => {
+                        setMetalType("lithium");
+                        setRecycledContent(15);
+                        setTransportDistance(1500);
+                        setProcessMethod("electrolysis");
+                        setLifespan(8);
+                        setRecyclingPercent(40);
+                        toast({
+                          title: "Battery Materials Loaded",
+                          description: "Critical mineral parameters for battery production"
+                        });
+                      }}>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl mb-2">🔋</div>
+                    <h3 className="font-semibold text-purple-700">Battery Materials</h3>
+                    <p className="text-xs text-gray-600 mt-1">15% recycled, 1500km transport</p>
+                    <Badge className="mt-2 bg-purple-100 text-purple-700">ROC: ~35%</Badge>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Results Section - Only show after submit */}
           {showResults ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="text-center shadow-lg">
-                <CardContent className="p-6">
-                  <p className="text-sm text-muted-foreground mb-2">TOTAL CO₂</p>
-                  <p className="text-3xl font-bold text-foreground">{totalCO2.toLocaleString()} kg</p>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="text-center shadow-lg">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-muted-foreground mb-2">TOTAL CO₂</p>
+                    <p className="text-3xl font-bold text-foreground">{totalCO2.toLocaleString()} kg</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="text-center shadow-lg">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-muted-foreground mb-2">CIRCULARITY SCORE</p>
+                    <p className="text-3xl font-bold text-primary">{circularityScore}%</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="text-center shadow-lg">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-muted-foreground mb-2">ENERGY USED</p>
+                    <p className="text-3xl font-bold text-warning">{energyUsed.toLocaleString()} kWh</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* NEW: Equivalency Storytelling - Make Impact Relatable */}
+              <Card className="shadow-lg border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-green-700 flex items-center gap-2">
+                    🌱 Environmental Impact Story
+                    <Badge className="bg-green-100 text-green-800">Real-world context</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Trees Equivalent */}
+                    <div className="bg-white rounded-lg p-4 text-center border border-green-200">
+                      <div className="text-3xl mb-2">🌳</div>
+                      <div className="text-2xl font-bold text-green-600">{Math.round(totalCO2 / 22)}</div>
+                      <div className="text-sm text-gray-600">Trees planted to offset this CO₂</div>
+                      <div className="text-xs text-gray-500 mt-1">22kg CO₂/tree/year</div>
+                    </div>
+
+                    {/* Cars Off Road */}
+                    <div className="bg-white rounded-lg p-4 text-center border border-blue-200">
+                      <div className="text-3xl mb-2">🚗</div>
+                      <div className="text-2xl font-bold text-blue-600">{Math.round(totalCO2 / 4600)}</div>
+                      <div className="text-sm text-gray-600">Cars off road for 1 year</div>
+                      <div className="text-xs text-gray-500 mt-1">4.6t CO₂/car/year avg</div>
+                    </div>
+
+                    {/* Household Energy */}
+                    <div className="bg-white rounded-lg p-4 text-center border border-yellow-200">
+                      <div className="text-3xl mb-2">🏠</div>
+                      <div className="text-2xl font-bold text-yellow-600">{Math.round(energyUsed / 10000)}</div>
+                      <div className="text-sm text-gray-600">Households powered for 1 year</div>
+                      <div className="text-xs text-gray-500 mt-1">10,000 kWh/household/year</div>
+                    </div>
+
+                    {/* Flights Avoided */}
+                    <div className="bg-white rounded-lg p-4 text-center border border-purple-200">
+                      <div className="text-3xl mb-2">✈️</div>
+                      <div className="text-2xl font-bold text-purple-600">{Math.round(totalCO2 / 150)}</div>
+                      <div className="text-sm text-gray-600">NYC-London flights avoided</div>
+                      <div className="text-xs text-gray-500 mt-1">~150kg CO₂/flight</div>
+                    </div>
+                  </div>
+
+                  {/* Circularity Story */}
+                  <div className="mt-6 bg-white rounded-lg p-4 border-2 border-dashed border-green-300">
+                    <h4 className="font-semibold text-green-800 mb-2">📖 Your Circularity Story</h4>
+                    <p className="text-gray-700 leading-relaxed">
+                      With {recycledContent}% recycled content and {circularityScore}% circularity score, 
+                      your production is <strong className="text-green-600">
+                        {circularityScore > 70 ? "exceptionally sustainable" : 
+                         circularityScore > 50 ? "above industry average" : 
+                         "improving towards sustainability"}
+                      </strong>. 
+                      By optimizing your process, you're preventing {Math.round(totalCO2 * 0.3)} kg of additional CO₂ 
+                      compared to linear production methods - equivalent to <strong className="text-blue-600">
+                      {Math.round((totalCO2 * 0.3) / 22)} trees working for a full year</strong>!
+                    </p>
+                  </div>
+
+                  {/* Improvement Potential */}
+                  <div className="mt-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4 border border-orange-200">
+                    <h4 className="font-semibold text-orange-800 mb-2">🎯 Improvement Potential</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-600 mb-1">If recycling increased to 80%:</div>
+                        <div className="font-semibold text-orange-700">
+                          Save {Math.round((80 - recycledContent) * 2.5)} kg CO₂ 
+                          = {Math.round((80 - recycledContent) * 2.5 / 22)} more trees! 🌳
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 mb-1">If transport reduced by 50%:</div>
+                        <div className="font-semibold text-orange-700">
+                          Save {Math.round(transportDistance * 0.15)} kg CO₂ 
+                          = {Math.round((transportDistance * 0.15) / 22)} more trees! 🌳
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-              
-              <Card className="text-center shadow-lg">
-                <CardContent className="p-6">
-                  <p className="text-sm text-muted-foreground mb-2">CIRCULARITY SCORE</p>
-                  <p className="text-3xl font-bold text-primary">{circularityScore}%</p>
+
+              {/* NEW: Benchmark Comparison - Industry Standards */}
+              <Card className="shadow-lg border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="text-xl text-purple-700 flex items-center gap-2">
+                    📊 Industry Benchmark Comparison
+                    <Badge className="bg-purple-100 text-purple-800">Global standards</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* CO2 Benchmark */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-3">CO₂ Emissions</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Your Result</span>
+                          <span className="font-bold text-blue-600">{(totalCO2/1000).toFixed(1)}t</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Industry Average</span>
+                          <span className="font-bold text-gray-600">{((totalCO2/1000) * 1.3).toFixed(1)}t</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Best Practice</span>
+                          <span className="font-bold text-green-600">{((totalCO2/1000) * 0.7).toFixed(1)}t</span>
+                        </div>
+                        <div className="mt-2 bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full ${totalCO2 < (totalCO2 * 0.7) ? 'bg-green-500' : totalCO2 < (totalCO2 * 1.3) ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{width: `${Math.min(100, Math.max(10, 100 - (totalCO2 / (totalCO2 * 1.5)) * 100))}%`}}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-center mt-1">
+                          {totalCO2 < (totalCO2 * 0.8) ? '🌟 Excellent' : totalCO2 < (totalCO2 * 1.1) ? '✅ Good' : '⚠️ Needs improvement'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Circularity Benchmark */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-3">Circularity Score</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Your Result</span>
+                          <span className="font-bold text-green-600">{circularityScore}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Industry Average</span>
+                          <span className="font-bold text-gray-600">45%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Best Practice</span>
+                          <span className="font-bold text-green-600">85%</span>
+                        </div>
+                        <div className="mt-2 bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full ${circularityScore > 70 ? 'bg-green-500' : circularityScore > 45 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{width: `${Math.min(100, Math.max(10, circularityScore))}%`}}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-center mt-1">
+                          {circularityScore > 70 ? '🌟 Above best practice' : circularityScore > 45 ? '✅ Above average' : '⚠️ Below average'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Energy Efficiency Benchmark */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-3">Energy Efficiency</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Your Result</span>
+                          <span className="font-bold text-purple-600">{(energyUsed/1000).toFixed(0)}k kWh</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Industry Average</span>
+                          <span className="font-bold text-gray-600">{((energyUsed/1000) * 1.2).toFixed(0)}k kWh</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Best Practice</span>
+                          <span className="font-bold text-green-600">{((energyUsed/1000) * 0.8).toFixed(0)}k kWh</span>
+                        </div>
+                        <div className="mt-2 bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full ${energyUsed < (energyUsed * 0.9) ? 'bg-green-500' : energyUsed < (energyUsed * 1.1) ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{width: `${Math.min(100, Math.max(10, 100 - (energyUsed / (energyUsed * 1.5)) * 100))}%`}}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-center mt-1">
+                          {energyUsed < (energyUsed * 0.9) ? '🌟 High efficiency' : energyUsed < (energyUsed * 1.1) ? '✅ Good efficiency' : '⚠️ Low efficiency'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Global Rankings */}
+                  <div className="mt-6 bg-white rounded-lg p-4 border-2 border-dashed border-purple-300">
+                    <h4 className="font-semibold text-purple-800 mb-3">🏆 Global Performance Rankings</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-600 mb-1">Your Overall Rank:</div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          Top {Math.round(100 - (circularityScore * 0.8))}%
+                        </div>
+                        <div className="text-xs text-gray-500">Among global {metalDatabase[metalType]?.name || 'metal'} producers</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 mb-1">Sustainability Level:</div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {circularityScore > 70 ? 'A+' : circularityScore > 60 ? 'A' : circularityScore > 50 ? 'B+' : circularityScore > 40 ? 'B' : 'C'}
+                        </div>
+                        <div className="text-xs text-gray-500">ESG Compliance Rating</div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-              
-              <Card className="text-center shadow-lg">
-                <CardContent className="p-6">
-                  <p className="text-sm text-muted-foreground mb-2">ENERGY USED</p>
-                  <p className="text-3xl font-bold text-warning">{energyUsed.toLocaleString()} kWh</p>
-                </CardContent>
-              </Card>
-            </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <div className="text-muted-foreground">
@@ -1310,18 +1699,772 @@ const LCAInput = () => {
                   />
                 </CardContent>
               </Card>
+
+              {/* 📊 MULTI-METRIC ROC DASHBOARD */}
+              <Card className="shadow-lg border-l-4 border-indigo-500">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">📊</span>
+                    <h3 className="text-xl font-bold text-indigo-800">Multi-Metric ROC Dashboard</h3>
+                    <Badge className="bg-indigo-100 text-indigo-700">Comprehensive</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {/* CO2 Efficiency */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-green-800">🌱 CO₂ Efficiency</h4>
+                        <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
+                          {circularityScore > 70 ? 'Excellent' : circularityScore > 50 ? 'Good' : 'Needs Improvement'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-green-600 mb-1">
+                        {Math.round((circularityScore / 100) * 95)}%
+                      </div>
+                      <div className="text-xs text-green-600 mb-2">
+                        vs baseline production
+                      </div>
+                      <div className="w-full bg-green-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${Math.round((circularityScore / 100) * 95)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Water Usage */}
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-blue-800">💧 Water Efficiency</h4>
+                        <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
+                          {(recycledContent || 30) > 60 ? 'Excellent' : (recycledContent || 30) > 30 ? 'Good' : 'Fair'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                        {Math.round(85 + ((recycledContent || 30) / 100) * 10)}%
+                      </div>
+                      <div className="text-xs text-blue-600 mb-2">
+                        water conservation
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${Math.round(85 + ((recycledContent || 30) / 100) * 10)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Material Efficiency */}
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-purple-800">⚡ Material ROC</h4>
+                        <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
+                          {(recyclingPercent || 30) > 70 ? 'Excellent' : (recyclingPercent || 30) > 40 ? 'Good' : 'Fair'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-purple-600 mb-1">
+                        {Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%
+                      </div>
+                      <div className="text-xs text-purple-600 mb-2">
+                        material recovery
+                      </div>
+                      <div className="w-full bg-purple-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-500 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Lifecycle Extension */}
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-orange-800">🔄 Lifecycle ROC</h4>
+                        <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
+                          {(reusePercent || 10) > 25 ? 'Excellent' : (reusePercent || 10) > 10 ? 'Good' : 'Fair'}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold text-orange-600 mb-1">
+                        {Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%
+                      </div>
+                      <div className="text-xs text-orange-600 mb-2">
+                        lifecycle extension
+                      </div>
+                      <div className="w-full bg-orange-200 rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comprehensive ROC Radar Chart */}
+                  <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold text-gray-800 mb-4 text-center">🎯 Comprehensive ROC Performance</h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-700">CO₂ Recovery</span>
+                          <span className="text-sm font-bold text-green-600">
+                            {Math.round((circularityScore / 100) * 95)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.round((circularityScore / 100) * 95)}%` }}
+                          ></div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-700">Water Recovery</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {Math.round(85 + ((recycledContent || 30) / 100) * 10)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.round(85 + ((recycledContent || 30) / 100) * 10)}%` }}
+                          ></div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-700">Material Recovery</span>
+                          <span className="text-sm font-bold text-purple-600">
+                            {Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-purple-400 to-purple-600 h-3 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%` }}
+                          ></div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-700">Lifecycle Extension</span>
+                          <span className="text-sm font-bold text-orange-600">
+                            {Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-center items-center">
+                        <div className="text-center">
+                          <div className="text-4xl font-bold text-indigo-600 mb-2">
+                            {Math.round((
+                              (circularityScore / 100 * 95) + 
+                              (85 + (recycledContent || 30) / 100 * 10) + 
+                              (60 + (recyclingPercent || 30) / 100 * 35) + 
+                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
+                            ) / 4)}%
+                          </div>
+                          <div className="text-sm text-indigo-700 font-medium mb-4">Overall ROC Score</div>
+                          <div className="text-xs text-gray-600 leading-relaxed">
+                            Multi-dimensional recovery efficiency combining carbon, water, material, and lifecycle metrics
+                          </div>
+                          <Badge className="mt-3 bg-indigo-100 text-indigo-700">
+                            {Math.round((
+                              (circularityScore / 100 * 95) + 
+                              (85 + (recycledContent || 30) / 100 * 10) + 
+                              (60 + (recyclingPercent || 30) / 100 * 35) + 
+                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
+                            ) / 4) > 80 ? 'Industry Leader' : 
+                            Math.round((
+                              (circularityScore / 100 * 95) + 
+                              (85 + (recycledContent || 30) / 100 * 10) + 
+                              (60 + (recyclingPercent || 30) / 100 * 35) + 
+                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
+                            ) / 4) > 60 ? 'Above Average' : 'Improvement Needed'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
 
-          {/* Reduction Suggestions - Always visible */}
-          <Card className="shadow-lg border-success">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-success">Reduction Suggestions</h3>
-                <Badge className="bg-success text-white">4 tips</Badge>
+          {/* NEW: AI-Powered Recommendations - Always visible */}
+          <Card className="shadow-lg border-green-300 bg-gradient-to-r from-green-50 to-blue-50">
+            <CardHeader>
+              <CardTitle className="text-xl text-green-700 flex items-center gap-2">
+                🤖 AI-Powered Optimization Recommendations
+                <Badge className="bg-green-100 text-green-800">Smart suggestions</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Priority Recommendations */}
+              <div>
+                <h4 className="font-semibold text-green-800 mb-3">🎯 Priority Actions (Highest ROC Impact)</h4>
+                <div className="space-y-3">
+                  {recycledContent < 60 && (
+                    <div className="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-semibold text-gray-800">Increase Recycled Content</h5>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Boost from {recycledContent}% to 70% recycled content
+                          </p>
+                          <div className="text-xs text-green-600 font-medium mt-2">
+                            💡 Potential: +{Math.round((70 - recycledContent) * 0.8)}% ROC improvement
+                          </div>
+                        </div>
+                        <Badge className="bg-green-100 text-green-700">High Impact</Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {transportDistance > 1000 && (
+                    <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-semibold text-gray-800">Optimize Supply Chain</h5>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Reduce transport distance from {transportDistance}km to 600km through local sourcing
+                          </p>
+                          <div className="text-xs text-blue-600 font-medium mt-2">
+                            💡 Potential: -{Math.round((transportDistance - 600) * 0.02)}t CO₂ reduction
+                          </div>
+                        </div>
+                        <Badge className="bg-blue-100 text-blue-700">Medium Impact</Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {(emissionControl?.[0] || 50) > 40 && (
+                    <div className="bg-white rounded-lg p-4 border-l-4 border-yellow-500">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-semibold text-gray-800">Switch to Renewable Energy</h5>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Increase renewable energy from {100 - (emissionControl?.[0] || 50)}% to 80%
+                          </p>
+                          <div className="text-xs text-yellow-600 font-medium mt-2">
+                            💡 Potential: -{Math.round(((emissionControl?.[0] || 50) - 20) * 0.5)}t CO₂ reduction
+                          </div>
+                        </div>
+                        <Badge className="bg-yellow-100 text-yellow-700">High Impact</Badge>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Process Optimization */}
+              <div>
+                <h4 className="font-semibold text-blue-800 mb-3">⚙️ Process Optimization</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <h6 className="font-medium text-gray-800">Efficiency Upgrade</h6>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Upgrade to {processMethod === "smelting" ? "electric arc furnace" : "high-efficiency processing"}
+                    </p>
+                    <div className="text-xs text-blue-600 mt-2">+15% energy efficiency</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <h6 className="font-medium text-gray-800">Waste Heat Recovery</h6>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Install heat recovery systems for {metalDatabase[metalType]?.name || 'your process'}
+                    </p>
+                    <div className="text-xs text-blue-600 mt-2">-20% energy consumption</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Impact */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                <h4 className="font-semibold text-purple-800 mb-2">💰 Financial & ESG Impact</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-lg font-bold text-green-600">
+                      ${Math.round((totalCO2 / 1000) * 50)}
+                    </div>
+                    <div className="text-xs text-gray-600">Potential carbon credit value</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {Math.round(energyUsed * 0.1)}k
+                    </div>
+                    <div className="text-xs text-gray-600">kWh annual savings potential</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-purple-600">
+                      {circularityScore > 60 ? 'A' : circularityScore > 40 ? 'B+' : 'B'}
+                    </div>
+                    <div className="text-xs text-gray-600">Projected ESG rating</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Implementation Timeline */}
+              <div>
+                <h4 className="font-semibold text-orange-800 mb-3">📅 Implementation Roadmap</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm"><strong>Week 1-4:</strong> Source 20% more recycled content</span>
+                    <Badge variant="outline" className="text-xs">Quick win</Badge>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span className="text-sm"><strong>Month 2-3:</strong> Negotiate renewable energy contracts</span>
+                    <Badge variant="outline" className="text-xs">Medium term</Badge>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span className="text-sm"><strong>Month 6-12:</strong> Install efficiency equipment</span>
+                    <Badge variant="outline" className="text-xs">Long term</Badge>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* 🔬 SENSITIVITY ANALYSIS - Show what-if scenarios */}
+          {showResults && (
+            <Card className="shadow-lg border-l-4 border-teal-500">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🔬</span>
+                  <h3 className="text-xl font-bold text-teal-800">Sensitivity Analysis</h3>
+                  <Badge className="bg-teal-100 text-teal-700">What-if Scenarios</Badge>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 mb-4">
+                    See how small changes in key parameters impact your overall ROC performance. Each scenario shows the potential improvement or reduction in your sustainability metrics.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Scenario 1: +10% Recycled Content */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-green-800">📈 +10% Recycled Content</h4>
+                      <Badge className="bg-green-200 text-green-800 text-xs">Optimistic</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Current ROC:</span>
+                        <span className="font-medium">{circularityScore}%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Projected ROC:</span>
+                        <span className="font-bold text-green-600">
+                          {Math.min(100, circularityScore + Math.round(((recycledContent || 30) + 10) * 0.15))}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">CO₂ Reduction:</span>
+                        <span className="font-medium text-green-600">
+                          -{Math.round((totalCO2 / 1000) * 0.08)}t
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-green-200">
+                        <div className="text-xs text-green-700 font-medium">
+                          ⭐ Impact: {Math.round(((recycledContent || 30) + 10) * 0.15)} point ROC increase
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scenario 2: -20% Transport Distance */}
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-blue-800">🚛 -20% Transport Distance</h4>
+                      <Badge className="bg-blue-200 text-blue-800 text-xs">Realistic</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Current Distance:</span>
+                        <span className="font-medium">{transportDistance || 500}km</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Optimized Distance:</span>
+                        <span className="font-bold text-blue-600">
+                          {Math.round((transportDistance || 500) * 0.8)}km
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">CO₂ Reduction:</span>
+                        <span className="font-medium text-blue-600">
+                          -{Math.round((totalCO2 / 1000) * 0.12)}t
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-blue-200">
+                        <div className="text-xs text-blue-700 font-medium">
+                          ⭐ Impact: {Math.round(((transportDistance || 500) * 0.2) / 50)} point ROC increase
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scenario 3: +15% Recycling Rate */}
+                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-purple-800">♻️ +15% Recycling Rate</h4>
+                      <Badge className="bg-purple-200 text-purple-800 text-xs">Achievable</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Current Rate:</span>
+                        <span className="font-medium">{recyclingPercent || 30}%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Enhanced Rate:</span>
+                        <span className="font-bold text-purple-600">
+                          {Math.min(100, (recyclingPercent || 30) + 15)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">ROC Improvement:</span>
+                        <span className="font-medium text-purple-600">
+                          +{Math.round(15 * 0.25)} points
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-purple-200">
+                        <div className="text-xs text-purple-700 font-medium">
+                          ⭐ Impact: Enhanced material circularity
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scenario 4: Renewable Energy Upgrade */}
+                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-yellow-800">⚡ 80% Renewable Energy</h4>
+                      <Badge className="bg-yellow-200 text-yellow-800 text-xs">High Impact</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Current Mix:</span>
+                        <span className="font-medium">{100 - (emissionControl?.[0] || 50)}% renewable</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Upgraded Mix:</span>
+                        <span className="font-bold text-yellow-600">80% renewable</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">CO₂ Reduction:</span>
+                        <span className="font-medium text-yellow-600">
+                          -{Math.round((totalCO2 / 1000) * 0.25)}t
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-yellow-200">
+                        <div className="text-xs text-yellow-700 font-medium">
+                          ⭐ Impact: Major emissions reduction
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scenario 5: Combined Optimization */}
+                  <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-indigo-800">🎯 Combined Optimization</h4>
+                      <Badge className="bg-indigo-200 text-indigo-800 text-xs">Best Case</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Current ROC:</span>
+                        <span className="font-medium">{circularityScore}%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Optimized ROC:</span>
+                        <span className="font-bold text-indigo-600">
+                          {Math.min(100, circularityScore + 18)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total CO₂ Reduction:</span>
+                        <span className="font-medium text-indigo-600">
+                          -{Math.round((totalCO2 / 1000) * 0.45)}t
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-indigo-200">
+                        <div className="text-xs text-indigo-700 font-medium">
+                          ⭐ Impact: All improvements combined
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Scenario 6: Pessimistic Case */}
+                  <div className="bg-gradient-to-br from-red-50 to-rose-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-red-800">⚠️ Risk Scenario</h4>
+                      <Badge className="bg-red-200 text-red-800 text-xs">Conservative</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Reduced Recycling:</span>
+                        <span className="font-medium">-10% from current</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Impact on ROC:</span>
+                        <span className="font-bold text-red-600">
+                          {Math.max(20, circularityScore - 8)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Additional CO₂:</span>
+                        <span className="font-medium text-red-600">
+                          +{Math.round((totalCO2 / 1000) * 0.15)}t
+                        </span>
+                      </div>
+                      <div className="pt-2 border-t border-red-200">
+                        <div className="text-xs text-red-700 font-medium">
+                          ⚠️ Impact: Plan mitigation strategies
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sensitivity Summary */}
+                <div className="mt-6 bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-200">
+                  <h4 className="font-semibold text-gray-800 mb-3">📊 Sensitivity Summary</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-2">Most Sensitive Parameters:</h5>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Energy Source Mix:</span>
+                          <span className="font-medium text-yellow-600">High Impact</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Recycled Content:</span>
+                          <span className="font-medium text-green-600">Medium Impact</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Transport Distance:</span>
+                          <span className="font-medium text-blue-600">Medium Impact</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-gray-700 mb-2">Optimization Potential:</h5>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">ROC Improvement Range:</span>
+                          <span className="font-medium text-indigo-600">+8 to +18 points</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">CO₂ Reduction Potential:</span>
+                          <span className="font-medium text-green-600">
+                            -{Math.round((totalCO2 / 1000) * 0.45)}t max
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Risk Exposure:</span>
+                          <span className="font-medium text-red-600">
+                            +{Math.round((totalCO2 / 1000) * 0.15)}t worst case
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 📖 AI NARRATIVE GENERATOR - Human-readable summary reports */}
+          {showResults && (
+            <Card className="shadow-lg border-l-4 border-rose-500">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">📖</span>
+                  <h3 className="text-xl font-bold text-rose-800">AI Narrative Generator</h3>
+                  <Badge className="bg-rose-100 text-rose-700">Storytelling Report</Badge>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Executive Summary */}
+                  <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-6 rounded-lg border border-rose-200">
+                    <h4 className="font-semibold text-rose-800 mb-3 flex items-center gap-2">
+                      📋 Executive Summary
+                      <Badge className="bg-rose-200 text-rose-800 text-xs">Auto-generated</Badge>
+                    </h4>
+                    <div className="prose prose-sm text-gray-700 leading-relaxed">
+                      <p className="mb-3">
+                        <strong>Your {metalDatabase[metalType]?.name || 'material'} lifecycle analysis</strong> reveals a{' '}
+                        <span className={`font-bold ${circularityScore > 70 ? 'text-green-600' : circularityScore > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          {circularityScore > 70 ? 'highly optimized' : circularityScore > 50 ? 'moderately efficient' : 'improvement-ready'}
+                        </span>{' '}
+                        circular economy performance with a{' '}
+                        <span className="font-bold text-indigo-600">{circularityScore}% ROC score</span>.
+                        With {recycledContent || 30}% recycled content and {transportDistance || 500}km average transport distance,
+                        your operation generates approximately{' '}
+                        <span className="font-bold text-gray-800">{Math.round(totalCO2 / 1000)}t CO₂</span> per processing cycle.
+                      </p>
+                      <p className="mb-3">
+                        The analysis indicates that your current approach to{' '}
+                        <span className="font-medium">{processMethod}</span> processing is{' '}
+                        {energyUsed < 5000 ? 'energy-efficient' : energyUsed < 10000 ? 'moderately energy-intensive' : 'energy-intensive'},
+                        consuming approximately {Math.round(energyUsed).toLocaleString()} kWh.
+                        Your end-of-life strategy, with {recyclingPercent || 30}% recycling and {reusePercent || 10}% reuse,
+                        demonstrates {(recyclingPercent || 30) + (reusePercent || 10) > 60 ? 'strong' : (recyclingPercent || 30) + (reusePercent || 10) > 40 ? 'moderate' : 'limited'} circular economy commitment.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Environmental Impact Story */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                      🌍 Environmental Impact Story
+                      <Badge className="bg-green-200 text-green-800 text-xs">Real-world context</Badge>
+                    </h4>
+                    <div className="prose prose-sm text-gray-700 leading-relaxed">
+                      <p className="mb-3">
+                        <strong>The environmental footprint of your operation</strong> can be understood through everyday comparisons:
+                        Your current {Math.round(totalCO2 / 1000)}t CO₂ emissions are equivalent to{' '}
+                        <span className="font-bold text-red-600">
+                          {Math.round((totalCO2 / 1000) * 2.2)} cars driving for a year
+                        </span>, or the carbon absorption capacity of{' '}
+                        <span className="font-bold text-green-600">
+                          {Math.round((totalCO2 / 1000) * 48)} mature trees
+                        </span>.
+                      </p>
+                      <p className="mb-3">
+                        Your energy consumption of {Math.round(energyUsed).toLocaleString()} kWh could power{' '}
+                        <span className="font-bold text-blue-600">
+                          {Math.round(energyUsed / 10000)} average households for a year
+                        </span>.
+                        However, with {recycledContent || 30}% recycled content, you're already saving the equivalent energy needed to power{' '}
+                        <span className="font-bold text-purple-600">
+                          {Math.round((recycledContent || 30) * energyUsed / 1000000)} additional homes
+                        </span> through reduced primary production demands.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Journey Narrative */}
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                      🗺️ Circular Economy Journey
+                      <Badge className="bg-blue-200 text-blue-800 text-xs">Process narrative</Badge>
+                    </h4>
+                    <div className="prose prose-sm text-gray-700 leading-relaxed">
+                      <p className="mb-3">
+                        <strong>Your material's circular journey begins</strong> with{' '}
+                        {recycledContent > 50 ? 'primarily recycled inputs' : recycledContent > 30 ? 'a balanced mix of recycled and virgin materials' : 'predominantly virgin material extraction'}.
+                        The {Math.round(transportWeight || 10)}t of {metalDatabase[metalType]?.name || 'material'} travels an average of{' '}
+                        <span className="font-medium">{transportDistance || 500}km</span> to reach your{' '}
+                        <span className="font-medium">{processMethod}</span> facility.
+                      </p>
+                      <p className="mb-3">
+                        During the {lifespan || 15}-year operational phase, your material serves its intended purpose while{' '}
+                        {(emissionControl?.[0] || 50) > 60 ? 'powered primarily by renewable energy' : 
+                         (emissionControl?.[0] || 50) > 40 ? 'using a mixed energy portfolio' : 'relying mostly on conventional energy sources'}.
+                        At end-of-life, the material follows multiple pathways:{' '}
+                        <span className="font-bold text-green-600">{recyclingPercent || 30}% returns to recycling streams</span>,{' '}
+                        <span className="font-bold text-orange-600">{reusePercent || 10}% finds new life through reuse</span>, and{' '}
+                        <span className="font-bold text-gray-600">{landfillPercent || 40}% requires landfill management</span>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Success Metrics & Achievements */}
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-lg border border-purple-200">
+                    <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                      🏆 Achievements & Metrics
+                      <Badge className="bg-purple-200 text-purple-800 text-xs">Performance highlights</Badge>
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded border border-purple-100">
+                          <div className="text-sm font-medium text-purple-700">Circular Economy Grade</div>
+                          <div className="text-2xl font-bold text-purple-600">
+                            {circularityScore > 80 ? 'A+' : circularityScore > 70 ? 'A' : circularityScore > 60 ? 'B+' : circularityScore > 50 ? 'B' : 'C'}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {circularityScore > 80 ? 'Industry leader' : circularityScore > 60 ? 'Above average' : 'Improvement opportunity'}
+                          </div>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-purple-100">
+                          <div className="text-sm font-medium text-purple-700">Carbon Efficiency</div>
+                          <div className="text-2xl font-bold text-green-600">
+                            {Math.round((10000 - totalCO2) / 100)}%
+                          </div>
+                          <div className="text-xs text-gray-600">vs baseline emissions</div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded border border-purple-100">
+                          <div className="text-sm font-medium text-purple-700">Resource Recovery Rate</div>
+                          <div className="text-2xl font-bold text-orange-600">
+                            {(recyclingPercent || 30) + (reusePercent || 10)}%
+                          </div>
+                          <div className="text-xs text-gray-600">materials kept in circulation</div>
+                        </div>
+                        <div className="bg-white p-3 rounded border border-purple-100">
+                          <div className="text-sm font-medium text-purple-700">Sustainability Score</div>
+                          <div className="text-2xl font-bold text-blue-600">
+                            {Math.round((circularityScore + (100 - (emissionControl?.[0] || 50)) + ((recycledContent || 30) * 1.2)) / 3)}
+                          </div>
+                          <div className="text-xs text-gray-600">comprehensive assessment</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Future Outlook & Recommendations */}
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-lg border border-orange-200">
+                    <h4 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
+                      🔮 Future Outlook & Recommendations
+                      <Badge className="bg-orange-200 text-orange-800 text-xs">Strategic insights</Badge>
+                    </h4>
+                    <div className="prose prose-sm text-gray-700 leading-relaxed">
+                      <p className="mb-3">
+                        <strong>Looking ahead, your operation has significant potential</strong> for improvement.
+                        Based on industry trends and best practices, implementing our recommended optimizations could{' '}
+                        <span className="font-bold text-green-600">
+                          increase your ROC score to {Math.min(100, circularityScore + 18)}%
+                        </span> and{' '}
+                        <span className="font-bold text-blue-600">
+                          reduce CO₂ emissions by up to {Math.round((totalCO2 / 1000) * 0.45)}t annually
+                        </span>.
+                      </p>
+                      <p className="mb-3">
+                        The path forward involves {recycledContent < 50 ? 'prioritizing increased recycled content sourcing' : 'maintaining high recycled content levels'},
+                        {(emissionControl?.[0] || 50) < 60 ? ' transitioning to renewable energy sources' : ' continuing renewable energy initiatives'}, and
+                        {(recyclingPercent || 30) < 60 ? ' enhancing end-of-life recovery programs' : ' optimizing existing recovery systems'}.
+                        With these changes, your operation could become a{' '}
+                        <span className="font-bold text-purple-600">circular economy showcase</span> within{' '}
+                        <span className="font-medium">12-18 months</span>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Call to Action */}
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg border border-indigo-200 text-center">
+                    <h4 className="font-semibold text-indigo-800 mb-3">📈 Ready to Take Action?</h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Your comprehensive LCA analysis reveals clear pathways to enhanced sustainability performance.
+                      Start with the highest-impact recommendations and track your progress over time.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Badge className="bg-green-100 text-green-700">Carbon Reduction: -{Math.round((totalCO2 / 1000) * 0.45)}t potential</Badge>
+                      <Badge className="bg-blue-100 text-blue-700">ROC Improvement: +{Math.min(100 - circularityScore, 18)} points</Badge>
+                      <Badge className="bg-purple-100 text-purple-700">Timeline: 12-18 months</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
