@@ -397,7 +397,7 @@ const AnimatedTransportIcon: React.FC<{
           <div className="text-lg font-bold flex items-center justify-center gap-2">
             🚀 {TRANSPORT_MODES[mode].name} 3D
           </div>
-          <div className="text-sm text-gray-600">Progress: {Math.round(progress * 100)}%</div>
+          <div className="text-sm text-muted-foreground">Progress: {Math.round(progress * 100)}%</div>
           <div className="text-xs text-blue-600">
             Target Speed: {TRANSPORT_MODES[mode].speed} km/h
           </div>
@@ -664,28 +664,28 @@ const GeoMapping: React.FC = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-cyan-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             🌍 Geo-Mapping of Transport Impact
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-muted-foreground text-lg">
             Visualize transport routes and calculate real-time CO₂ emissions for different modes
           </p>
-          <Badge className="mt-2 bg-blue-100 text-blue-800">Real-world Industry Use Case</Badge>
+          <Badge className="mt-2 bg-primary/10 text-primary">Real-world Industry Use Case</Badge>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Control Panel */}
           <div className="lg:col-span-1 space-y-4">
             {/* Location Selection */}
-            <Card className="shadow-lg">
+            <Card className="shadow-lg border-border bg-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   📍 Route Configuration
-                  <Badge className="bg-green-100 text-green-700">Interactive</Badge>
+                  <Badge className="bg-success/10 text-success">Interactive</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -829,7 +829,7 @@ const GeoMapping: React.FC = () => {
                   <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
                     <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
                       🎮 Live Journey Progress
-                      <Badge className="bg-blue-100 text-blue-700">Continuous Loop</Badge>
+                      <Badge className="bg-primary/10 text-primary">Continuous Loop</Badge>
                       {journeyStats.cycleCount > 0 && (
                         <Badge className="bg-orange-100 text-orange-700">
                           🔄 Cycle {journeyStats.cycleCount}
@@ -849,7 +849,7 @@ const GeoMapping: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="mb-3">
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Current Leg Progress</span>
+                        <span className="text-foreground/70">Current Leg Progress</span>
                         <span className="font-bold text-blue-600">{Math.round(animationProgress * 100)}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
@@ -871,13 +871,13 @@ const GeoMapping: React.FC = () => {
                     {/* Current Leg Stats */}
                     <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                       <div className="bg-white p-2 rounded border">
-                        <div className="text-xs text-gray-500">Leg Distance</div>
+                        <div className="text-xs text-foreground/60">Leg Distance</div>
                         <div className="font-bold text-blue-600">
                           {Math.round(journeyStats.distanceCovered)} km
                         </div>
                       </div>
                       <div className="bg-white p-2 rounded border">
-                        <div className="text-xs text-gray-500">Leg CO₂</div>
+                        <div className="text-xs text-foreground/60">Leg CO₂</div>
                         <div className="font-bold text-red-600">
                           {Math.round(journeyStats.co2Generated)} kg
                         </div>
@@ -946,12 +946,12 @@ const GeoMapping: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
                     <div className="text-2xl font-bold text-blue-600">{Math.round(distance)}</div>
-                    <div className="text-xs text-gray-600">km distance</div>
+                    <div className="text-xs text-foreground/70">km distance</div>
                     <div className="text-xs text-blue-500 font-medium">🌍 Route Length</div>
                   </div>
                   <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                    <div className="text-2xl font-bold text-gray-800">{cargoWeight}</div>
-                    <div className="text-xs text-gray-600">tons cargo</div>
+                    <div className="text-2xl font-bold text-foreground">{cargoWeight}</div>
+                    <div className="text-xs text-foreground/70">tons cargo</div>
                     <div className="text-xs text-green-500 font-medium">📦 Payload</div>
                   </div>
                 </div>
@@ -976,11 +976,11 @@ const GeoMapping: React.FC = () => {
                   <div className="text-xs font-semibold text-green-800 mb-2">🌱 Environmental Impact</div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-600">Trees needed: </span>
+                      <span className="text-foreground/70">Trees needed: </span>
                       <span className="font-bold text-green-600">{Math.round(emissions / 22)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Car equivalent: </span>
+                      <span className="text-foreground/70">Car equivalent: </span>
                       <span className="font-bold text-red-600">{(emissions / 4600).toFixed(1)} cars/year</span>
                     </div>
                   </div>
@@ -1007,7 +1007,7 @@ const GeoMapping: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   🗺️ {currentMode.name} Route Map
-                  <Badge className="bg-blue-100 text-blue-700">Live Visualization</Badge>
+                  <Badge className="bg-primary/10 text-primary">Live Visualization</Badge>
                   <Badge className={`${
                     currentMode.mapStyle === 'satellite' ? 'bg-purple-100 text-purple-700' :
                     currentMode.mapStyle === 'terrain' ? 'bg-orange-100 text-orange-700' :
@@ -1048,7 +1048,7 @@ const GeoMapping: React.FC = () => {
                                   {TRANSPORT_MODES[transportMode].icon} START POINT
                                 </div>
                                 <div className="font-bold">{sourceLocation}</div>
-                                <div className="text-sm text-gray-600">Manufacturing/Origin Point 🏭</div>
+                                <div className="text-sm text-foreground/70">Manufacturing/Origin Point 🏭</div>
                                 <div className="text-xs text-green-600 mt-1">
                                   Transport Mode: {TRANSPORT_MODES[transportMode].name}
                                 </div>
@@ -1070,7 +1070,7 @@ const GeoMapping: React.FC = () => {
                                   {TRANSPORT_MODES[transportMode].icon} END POINT
                                 </div>
                                 <div className="font-bold">{destinationLocation}</div>
-                                <div className="text-sm text-gray-600">Delivery Point 🎯</div>
+                                <div className="text-sm text-foreground/70">Delivery Point 🎯</div>
                                 <div className="text-xs text-red-600 mt-1">
                                   Transport Mode: {TRANSPORT_MODES[transportMode].name}
                                 </div>
@@ -1169,7 +1169,7 @@ const GeoMapping: React.FC = () => {
                   >
                     <div className="text-center">
                       <div className="text-3xl mb-2">{icon}</div>
-                      <div className="font-semibold text-gray-800">{name}</div>
+                      <div className="font-semibold text-foreground">{name}</div>
                       <div className="text-sm text-gray-600 mb-3">
                         {emissionFactor} kg CO₂/ton-km
                       </div>
@@ -1192,7 +1192,7 @@ const GeoMapping: React.FC = () => {
                         )}
                         
                         {isSelected && (
-                          <Badge className="bg-blue-100 text-blue-700 text-xs">
+                          <Badge className="bg-primary/10 text-primary text-xs">
                             Currently Selected
                           </Badge>
                         )}
@@ -1205,13 +1205,13 @@ const GeoMapping: React.FC = () => {
             
             {/* Summary Stats */}
             <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-200">
-              <h4 className="font-semibold text-gray-800 mb-3">📈 Route Analysis Summary</h4>
+              <h4 className="font-semibold text-foreground mb-3">📈 Route Analysis Summary</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-green-600">
                     {bestAlternative.name}
                   </div>
-                  <div className="text-sm text-gray-600">Most Efficient Option</div>
+                  <div className="text-sm text-foreground/70">Most Efficient Option</div>
                   <div className="text-xs text-green-700 font-medium">
                     {Math.round(bestAlternative.emissions)} kg CO₂
                   </div>
@@ -1220,7 +1220,7 @@ const GeoMapping: React.FC = () => {
                   <div className="text-2xl font-bold text-red-600">
                     {allEmissions[allEmissions.length - 1].name}
                   </div>
-                  <div className="text-sm text-gray-600">Highest Emissions</div>
+                  <div className="text-sm text-foreground/70">Highest Emissions</div>
                   <div className="text-xs text-red-700 font-medium">
                     {Math.round(allEmissions[allEmissions.length - 1].emissions)} kg CO₂
                   </div>
@@ -1229,7 +1229,7 @@ const GeoMapping: React.FC = () => {
                   <div className="text-2xl font-bold text-blue-600">
                     {Math.round(((allEmissions[allEmissions.length - 1].emissions - bestAlternative.emissions) / allEmissions[allEmissions.length - 1].emissions) * 100)}%
                   </div>
-                  <div className="text-sm text-gray-600">Max Potential Savings</div>
+                  <div className="text-sm text-foreground/70">Max Potential Savings</div>
                   <div className="text-xs text-blue-700 font-medium">
                     By choosing optimal mode
                   </div>

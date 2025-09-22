@@ -299,39 +299,12 @@ const Reports = () => {
         }));
       } catch (e) {
         console.error("Error parsing saved reports:", e);
+        return [];
       }
     }
     
-    // Default reports if none found in localStorage
-    return [
-      {
-        id: 1,
-        title: "Aluminium Can LCA Analysis",
-        date: "2024-01-15",
-        type: "Comprehensive",
-        status: "Complete",
-        co2Saved: "3.2 tons",
-        rocScore: "28%",
-      },
-      {
-        id: 2,
-        title: "Copper Wire Circularity Study",
-        date: "2024-01-12",
-        type: "Circularity Focus",
-        status: "Complete",
-        co2Saved: "1.8 tons",
-        rocScore: "45%",
-      },
-      {
-        id: 3,
-        title: "Steel Production Optimization",
-        date: "2024-01-10",
-        type: "Process Analysis",
-        status: "Draft",
-        co2Saved: "12.5 tons",
-        rocScore: "52%",
-      },
-    ];
+    // Return empty array if no saved reports found
+    return [];
   });
 
   // Filter reports based on current filter settings
@@ -396,8 +369,8 @@ const Reports = () => {
   const viewReport = (report: any) => {
     console.log('🔍 viewReport called with:', report);
     
-    if (report.rawData) {
-      console.log('📁 Found rawData, loading real report...');
+    if (report.rawData && report.rawData.results) {
+      console.log('📁 Found rawData with results, loading real report...');
       // Store the report data to be loaded in LCAInput
       localStorage.setItem('currentReport', JSON.stringify(report.rawData));
       // Navigate to LCA Input page
@@ -405,7 +378,7 @@ const Reports = () => {
       
       toast({
         title: "Loading Report",
-        description: "Loading saved analysis data into the form...",
+        description: `Loading "${report.title}" analysis data into the form...`,
       });
     } else {
       console.log('📋 No rawData found, creating demo data...');
@@ -780,7 +753,7 @@ const Reports = () => {
                   <h3 className="text-lg font-semibold text-foreground mb-2">No reports found</h3>
                   <p className="text-muted-foreground mb-4">
                     {reports.length === 0 
-                      ? "No reports have been generated yet." 
+                      ? "Complete an LCA analysis to generate your first report. Use the LCA Input tool to get started." 
                       : "No reports match your current filters. Try adjusting your search criteria."
                     }
                   </p>

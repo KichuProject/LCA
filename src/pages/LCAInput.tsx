@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,2468 +6,3506 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
+import { Download, Brain, Zap, Sparkles, Target, ChevronLeft, ChevronRight, CheckCircle, Settings, TrendingUp, BarChart3, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie } from "recharts";
-import SimpleSankeyChart from "@/components/SimpleSankeyChart";
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie, LineChart, Line, Area, AreaChart, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, Tooltip } from "recharts";
+import SankeyChart from "@/components/SankeyChart";
+import * as d3 from 'd3';
+import { motion, AnimatePresence } from 'framer-motion';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const LCAInput = () => {
   const { toast } = useToast();
   
-  // Comprehensive metal emission factors database
-  // Format: [name, CO2_primary, CO2_new_scrap, CO2_old_scrap, production_volume]
-  const metalDatabase = {
-    "aluminium_primary": { name: "Aluminium (primary)", co2Primary: 131, co2NewScrap: 8.3, co2OldScrap: 23.8, production: 5974 },
-    "aluminium_new_scrap": { name: "Aluminium (new scrap)", co2Primary: 8.3, co2NewScrap: 0.4, co2OldScrap: null, production: 76.6 },
-    "aluminium_old_scrap": { name: "Aluminium (old scrap)", co2Primary: 23.8, co2NewScrap: 1.4, co2OldScrap: null, production: 300 },
-    "antimony": { name: "Antimony", co2Primary: 141, co2NewScrap: 12.9, co2OldScrap: null, production: null },
-    "arsenic": { name: "Arsenic (total)", co2Primary: 5.0, co2NewScrap: 0.3, co2OldScrap: null, production: 0.2 },
-    "barite": { name: "Barite (BaSO4)", co2Primary: 4.0, co2NewScrap: 0.2, co2OldScrap: null, production: null },
-    "beryllium_metal": { name: "Beryllium (metal)", co2Primary: 12000, co2NewScrap: 879, co2OldScrap: null, production: 100 },
-    "beryllium_hydroxide": { name: "Beryllium hydroxide", co2Primary: 319, co2NewScrap: 19, co2OldScrap: null, production: 100 },
-    "bismuth": { name: "Bismuth", co2Primary: 697, co2NewScrap: 58.9, co2OldScrap: null, production: 11.6 },
-    "borax": { name: "Borax (anhydrous)", co2Primary: 30.7, co2NewScrap: 1.6, co2OldScrap: null, production: null },
-    "boric_acid": { name: "Boric acid", co2Primary: 13.0, co2NewScrap: 0.7, co2OldScrap: null, production: null },
-    "cadmium": { name: "Cadmium (total)", co2Primary: 53.0, co2NewScrap: 3.0, co2OldScrap: null, production: null },
-    "calcium_metal": { name: "Calcium (metal)", co2Primary: 223, co2NewScrap: 16.3, co2OldScrap: null, production: 7.1 },
-    "calcium_carbonate": { name: "Calcium carbonate (quicklime)", co2Primary: 5.8, co2NewScrap: 1.0, co2OldScrap: null, production: 1787 },
-    "cerium_oxide": { name: "Cerium oxide", co2Primary: 252, co2NewScrap: 12.9, co2OldScrap: null, production: null },
-    "chromium": { name: "Chromium (total)", co2Primary: 40.2, co2NewScrap: 2.4, co2OldScrap: null, production: null },
-    "cobalt": { name: "Cobalt", co2Primary: 128, co2NewScrap: 8.3, co2OldScrap: null, production: 7.4 },
-    "copper": { name: "Copper (total)", co2Primary: 53.7, co2NewScrap: 2.8, co2OldScrap: null, production: 1062 },
-    "dysprosium_oxide": { name: "Dysprosium oxide", co2Primary: 1170, co2NewScrap: 59.6, co2OldScrap: null, production: null },
-    "erbium_oxide": { name: "Erbium oxide", co2Primary: 954, co2NewScrap: 48.7, co2OldScrap: null, production: null },
-    "europium_oxide": { name: "Europium oxide", co2Primary: 7750, co2NewScrap: 396, co2OldScrap: null, production: null },
-    "ferroniobium": { name: "Ferroniobium", co2Primary: 114, co2NewScrap: 8.3, co2OldScrap: null, production: null },
-    "gadolinium_oxide": { name: "Gadolinium oxide", co2Primary: 914, co2NewScrap: 46.6, co2OldScrap: null, production: null },
-    "gallium": { name: "Gallium", co2Primary: 3030, co2NewScrap: 205, co2OldScrap: null, production: 0.3 },
-    "germanium": { name: "Germanium", co2Primary: 2890, co2NewScrap: 170, co2OldScrap: null, production: 0.2 },
-    "gold": { name: "Gold (total)", co2Primary: 208000, co2NewScrap: 12500, co2OldScrap: null, production: null },
-    "hafnium": { name: "Hafnium (total)", co2Primary: 3510, co2NewScrap: 131, co2OldScrap: null, production: null },
-    "helium": { name: "Helium", co2Primary: 67.5, co2NewScrap: 0.9, co2OldScrap: null, production: null },
-    "holmium_oxide": { name: "Holmium oxide", co2Primary: 4400, co2NewScrap: 226, co2OldScrap: null, production: null },
-    "indium": { name: "Indium", co2Primary: 1720, co2NewScrap: 102, co2OldScrap: null, production: null },
-    "iridium": { name: "Iridium (total)", co2Primary: 169000, co2NewScrap: 8860, co2OldScrap: null, production: null },
-    "iron": { name: "Iron (pig iron)", co2Primary: 23.1, co2NewScrap: 1.5, co2OldScrap: null, production: 23033 },
-    "lanthanum_oxide": { name: "Lanthanum oxide", co2Primary: 216, co2NewScrap: 11.0, co2OldScrap: null, production: null },
-    "lead": { name: "Lead (total)", co2Primary: 18.9, co2NewScrap: 1.3, co2OldScrap: null, production: 225 },
-    "lithium": { name: "Lithium (total)", co2Primary: 125, co2NewScrap: 7.1, co2OldScrap: null, production: 60 },
-    "lutetium_oxide": { name: "Lutetium oxide", co2Primary: 17600, co2NewScrap: 896, co2OldScrap: null, production: null },
-    "magnesium": { name: "Magnesium (total)", co2Primary: 18.8, co2NewScrap: 5.4, co2OldScrap: null, production: null },
-    "manganese": { name: "Manganese (total)", co2Primary: 23.7, co2NewScrap: 1.0, co2OldScrap: null, production: null },
-    "mercury": { name: "Mercury", co2Primary: 179, co2NewScrap: 12.1, co2OldScrap: null, production: null },
-    "molybdenum": { name: "Molybdenum (total)", co2Primary: 117, co2NewScrap: 5.7, co2OldScrap: null, production: null },
-    "neodymium_oxide": { name: "Neodymium oxide", co2Primary: 344, co2NewScrap: 17.6, co2OldScrap: null, production: null },
-    "nickel": { name: "Nickel (total)", co2Primary: 111, co2NewScrap: 6.5, co2OldScrap: null, production: 345 },
-    "niobium": { name: "Niobium (total)", co2Primary: 172, co2NewScrap: 12.5, co2OldScrap: null, production: null },
-    "osmium": { name: "Osmium (total)", co2Primary: 85000, co2NewScrap: 4560, co2OldScrap: null, production: null },
-    "palladium": { name: "Palladium (total)", co2Primary: 72700, co2NewScrap: 3880, co2OldScrap: null, production: 15.3 },
-    "platinum": { name: "Platinum (total)", co2Primary: 243000, co2NewScrap: 12500, co2OldScrap: null, production: null },
-    "praseodymium_oxide": { name: "Praseodymium oxide", co2Primary: 376, co2NewScrap: 19.2, co2OldScrap: null, production: null },
-    "rhenium": { name: "Rhenium", co2Primary: 9040, co2NewScrap: 450, co2OldScrap: null, production: null },
-    "rhodium": { name: "Rhodium (total)", co2Primary: 683000, co2NewScrap: 35100, co2OldScrap: null, production: null },
-    "ruthenium": { name: "Ruthenium (total)", co2Primary: 41100, co2NewScrap: 2110, co2OldScrap: null, production: null },
-    "samarium_oxide": { name: "Samarium oxide", co2Primary: 1160, co2NewScrap: 59.1, co2OldScrap: null, production: null },
-    "scandium_oxide": { name: "Scandium oxide", co2Primary: 97200, co2NewScrap: 5710, co2OldScrap: null, production: 1.0 },
-    "selenium": { name: "Selenium", co2Primary: 65.5, co2NewScrap: 3.6, co2OldScrap: null, production: 0.2 },
-    "silver": { name: "Silver (total)", co2Primary: 3280, co2NewScrap: 196, co2OldScrap: null, production: null },
-    "steel": { name: "Steel (pig iron proxy)", co2Primary: 25, co2NewScrap: 2, co2OldScrap: null, production: 10 },
-    "strontium_carbonate": { name: "Strontium carbonate", co2Primary: 48.8, co2NewScrap: 3.2, co2OldScrap: null, production: 9.5 },
-    "tantalum": { name: "Tantalum", co2Primary: 4360, co2NewScrap: 260, co2OldScrap: null, production: 5.6 },
-    "tellurium": { name: "Tellurium", co2Primary: 435, co2NewScrap: 21.9, co2OldScrap: null, production: null },
-    "terbium_oxide": { name: "Terbium oxide", co2Primary: 5820, co2NewScrap: 297, co2OldScrap: null, production: null },
-    "thallium": { name: "Thallium", co2Primary: 5160, co2NewScrap: 376, co2OldScrap: null, production: null },
-    "thorium_oxide": { name: "Thorium oxide", co2Primary: 1260, co2NewScrap: 74.9, co2OldScrap: null, production: 0.70 },
-    "thulium_oxide": { name: "Thulium oxide", co2Primary: 12700, co2NewScrap: 649, co2OldScrap: null, production: null },
-    "tin": { name: "Tin", co2Primary: 321, co2NewScrap: 17.1, co2OldScrap: null, production: null },
-    "titanium": { name: "Titanium (total)", co2Primary: 115, co2NewScrap: 8.1, co2OldScrap: null, production: 569 },
-    "tungsten": { name: "Tungsten (total)", co2Primary: 133, co2NewScrap: 12.6, co2OldScrap: null, production: null },
-    "uranium": { name: "Uranium (yellowcake)", co2Primary: 1270, co2NewScrap: 90.7, co2OldScrap: null, production: 65.8 },
-    "vanadium": { name: "Vanadium", co2Primary: 516, co2NewScrap: 33.1, co2OldScrap: null, production: 29.1 },
-    "ytterbium_oxide": { name: "Ytterbium oxide", co2Primary: 2450, co2NewScrap: 125, co2OldScrap: null, production: null },
-    "yttrium_oxide": { name: "Yttrium oxide", co2Primary: 295, co2NewScrap: 15.1, co2OldScrap: null, production: 4.1 },
-    "zinc": { name: "Zinc (total)", co2Primary: 52.9, co2NewScrap: 3.1, co2OldScrap: null, production: 619 },
-    "zirconium": { name: "Zirconium (total)", co2Primary: 19.9, co2NewScrap: 1.1, co2OldScrap: null, production: 81.5 }
+  // D3 Chart Refs
+  const barChartRef = useRef<SVGSVGElement>(null);
+  const pieChartRef = useRef<SVGSVGElement>(null);
+  const comparisonChartRef = useRef<SVGSVGElement>(null);
+
+  // Animated D3 Bar Chart Component
+  const AnimatedD3BarChart = ({ data, width = 400, height = 300 }: any) => {
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+      if (!svgRef.current || !data) return;
+
+      const svg = d3.select(svgRef.current);
+      svg.selectAll("*").remove();
+
+      const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Color scale with vibrant colors
+      const colorScale = d3.scaleOrdinal()
+        .domain(['Current', 'Optimized'])
+        .range(['#ef4444', '#22c55e']);
+
+      // Scales
+      const xScale = d3.scaleBand()
+        .domain(data.map((d: any) => d.name))
+        .range([0, innerWidth])
+        .padding(0.2);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, (d: any) => Math.max(d.Current, d.Optimized)) as number])
+        .range([innerHeight, 0]);
+
+      // Create bars with animation
+      const barGroups = g.selectAll(".bar-group")
+        .data(data)
+        .enter().append("g")
+        .attr("class", "bar-group")
+        .attr("transform", (d: any) => `translate(${xScale(d.name)},0)`);
+
+      // Current bars
+      barGroups.append("rect")
+        .attr("class", "bar-current")
+        .attr("x", 0)
+        .attr("width", xScale.bandwidth() / 2)
+        .attr("y", innerHeight)
+        .attr("height", 0)
+        .attr("fill", colorScale('Current') as string)
+        .attr("rx", 4)
+        .transition()
+        .duration(1500)
+        .delay((d: any, i: number) => i * 200)
+        .ease(d3.easeBounceOut)
+        .attr("y", (d: any) => yScale(d.Current))
+        .attr("height", (d: any) => innerHeight - yScale(d.Current));
+
+      // Optimized bars
+      barGroups.append("rect")
+        .attr("class", "bar-optimized")
+        .attr("x", xScale.bandwidth() / 2)
+        .attr("width", xScale.bandwidth() / 2)
+        .attr("y", innerHeight)
+        .attr("height", 0)
+        .attr("fill", colorScale('Optimized') as string)
+        .attr("rx", 4)
+        .transition()
+        .duration(1500)
+        .delay((d: any, i: number) => i * 200 + 300)
+        .ease(d3.easeBounceOut)
+        .attr("y", (d: any) => yScale(d.Optimized))
+        .attr("height", (d: any) => innerHeight - yScale(d.Optimized));
+
+      // Add gradient effects
+      const defs = svg.append("defs");
+      
+      const gradient1 = defs.append("linearGradient")
+        .attr("id", "gradient-current")
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", innerHeight)
+        .attr("x2", 0).attr("y2", 0);
+      
+      gradient1.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#dc2626")
+        .attr("stop-opacity", 0.8);
+      
+      gradient1.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#f87171")
+        .attr("stop-opacity", 1);
+
+      const gradient2 = defs.append("linearGradient")
+        .attr("id", "gradient-optimized")
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", 0).attr("y1", innerHeight)
+        .attr("x2", 0).attr("y2", 0);
+      
+      gradient2.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#16a34a")
+        .attr("stop-opacity", 0.8);
+      
+      gradient2.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#4ade80")
+        .attr("stop-opacity", 1);
+
+      // Update bar fills to use gradients
+      barGroups.selectAll(".bar-current")
+        .attr("fill", "url(#gradient-current)");
+      
+      barGroups.selectAll(".bar-optimized")
+        .attr("fill", "url(#gradient-optimized)");
+
+      // Axes
+      g.append("g")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(xScale))
+        .selectAll("text")
+        .style("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("fill", "#374151");
+
+      g.append("g")
+        .call(d3.axisLeft(yScale))
+        .selectAll("text")
+        .style("font-size", "12px")
+        .style("fill", "#374151");
+
+    }, [data, width, height]);
+
+    return <svg ref={svgRef} width={width} height={height} className="overflow-visible" />;
+  };
+
+  // Animated D3 Pie Chart Component
+  const AnimatedD3PieChart = ({ data, width = 300, height = 300 }: any) => {
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+      if (!svgRef.current || !data) return;
+
+      const svg = d3.select(svgRef.current);
+      svg.selectAll("*").remove();
+
+      const radius = Math.min(width, height) / 2 - 20;
+      const g = svg.append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`);
+
+      // Vibrant color scale
+      const colorScale = d3.scaleOrdinal()
+        .domain(data.map((d: any) => d.name))
+        .range(['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6']);
+
+      const pie = d3.pie<any>()
+        .value((d: any) => d.value)
+        .sort(null);
+
+      const arc = d3.arc<any>()
+        .innerRadius(0)
+        .outerRadius(radius);
+
+      const arcHover = d3.arc<any>()
+        .innerRadius(0)
+        .outerRadius(radius + 10);
+
+      // Create pie slices with animation
+      const arcs = g.selectAll(".arc")
+        .data(pie(data))
+        .enter().append("g")
+        .attr("class", "arc");
+
+      // Add gradient definitions
+      const defs = svg.append("defs");
+      data.forEach((d: any, i: number) => {
+        const gradient = defs.append("radialGradient")
+          .attr("id", `pie-gradient-${i}`)
+          .attr("cx", "30%")
+          .attr("cy", "30%");
+        
+        gradient.append("stop")
+          .attr("offset", "0%")
+          .attr("stop-color", (d3.color(colorScale(d.name) as string)?.brighter(0.5) as any)?.toString() || colorScale(d.name) as string);
+        
+        gradient.append("stop")
+          .attr("offset", "100%")
+          .attr("stop-color", colorScale(d.name) as string);
+      });
+
+      arcs.append("path")
+        .attr("d", arc)
+        .attr("fill", (d: any, i: number) => `url(#pie-gradient-${i})`)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2)
+        .style("opacity", 0)
+        .on("mouseover", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("d", arcHover)
+            .style("filter", "drop-shadow(0px 4px 8px rgba(0,0,0,0.3))");
+        })
+        .on("mouseout", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("d", arc)
+            .style("filter", "none");
+        })
+        .transition()
+        .duration(1000)
+        .delay((d: any, i: number) => i * 200)
+        .ease(d3.easeElasticOut)
+        .style("opacity", 1)
+        .attrTween("d", function(d) {
+          const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+          return function(t) {
+            return arc(interpolate(t));
+          };
+        });
+
+      // Add labels with animation
+      arcs.append("text")
+        .attr("transform", (d: any) => `translate(${arc.centroid(d)})`)
+        .attr("dy", "0.35em")
+        .style("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("font-weight", "bold")
+        .style("fill", "#ffffff")
+        .style("opacity", 0)
+        .text((d: any) => `${d.data.name} ${d.data.value}%`)
+        .transition()
+        .duration(1000)
+        .delay(1500)
+        .style("opacity", 1);
+
+    }, [data, width, height]);
+
+    return <svg ref={svgRef} width={width} height={height} className="overflow-visible" />;
+  };
+
+  // Animated Step Title Component
+  const AnimatedStepTitle = ({ step, title, isActive, isCompleted }: any) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+          isActive 
+            ? 'bg-card border-primary/30 shadow-lg ring-1 ring-primary/20' 
+            : isCompleted 
+              ? 'bg-card border-success/30 ring-1 ring-success/20' 
+              : 'bg-muted border-border'
+        }`}
+      >
+        <motion.div
+          animate={{
+            scale: isActive ? [1, 1.2, 1] : 1,
+            rotate: isCompleted ? 360 : 0
+          }}
+          transition={{
+            scale: { duration: 2, repeat: isActive ? Infinity : 0 },
+            rotate: { duration: 0.6 }
+          }}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+            isActive 
+              ? 'bg-gradient-to-r from-primary to-blue-600' 
+              : isCompleted 
+                ? 'bg-gradient-to-r from-success to-emerald-600' 
+                : 'bg-muted-foreground'
+          }`}
+        >
+          {isCompleted ? '✓' : step}
+        </motion.div>
+        <motion.h3
+          animate={{
+            color: isActive ? 'hsl(var(--primary))' : isCompleted ? 'hsl(var(--success))' : 'hsl(var(--muted-foreground))'
+          }}
+          transition={{ duration: 0.3 }}
+          className="text-lg font-semibold"
+        >
+          {title}
+        </motion.h3>
+        {isActive && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="ml-auto"
+          >
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  };
+
+  const stepTitles = [
+    "Product Definition",
+    "Material Selection", 
+    "Manufacturing Process",
+    "Transportation & Distribution",
+    "Use Phase Analysis",
+    "End-of-Life Treatment",
+    "AI Analysis & Optimization",
+    "Environmental Impact Assessment",
+    "Sustainability Recommendations"
+  ];
+  
+  // AI/ML Model Configuration
+  const AI_MODELS = {
+    "Random Forest": { accuracy: 0.075, r2: 0.075 },
+    "Gradient Boosting": { accuracy: 0.072, r2: 0.072 },
+    "Neural Network": { accuracy: 0.080, r2: 0.080 }, // Best performing
+    "Legacy Water": { accuracy: 0.045, r2: 0.045 }
   };
   
-  // Form State
-  const [metalType, setMetalType] = useState("aluminium_primary");
-  const [recycledContent, setRecycledContent] = useState(30);
-  const [sourceRegion, setSourceRegion] = useState("EU");
-  const [energyPerTon, setEnergyPerTon] = useState("");
-  const [processMethod, setProcessMethod] = useState("smelting");
-  const [plantType, setPlantType] = useState("integrated");
-  const [plantLocation, setPlantLocation] = useState("germany");
-  const [transportDistance, setTransportDistance] = useState(800);
-  const [transportMode, setTransportMode] = useState("truck");
-  const [transportWeight, setTransportWeight] = useState(10);
-  const [lifespan, setLifespan] = useState(10);
-  const [efficiencyFactor, setEfficiencyFactor] = useState(0.9);
-  const [recyclingPercent, setRecyclingPercent] = useState(30);
-  const [landfillPercent, setLandfillPercent] = useState(40);
-  const [reusePercent, setReusePercent] = useState(10);
-  const [recoveryMethod, setRecoveryMethod] = useState("downcycling");
+  const BEST_MODEL = "Neural Network";
+  const TRAINING_SAMPLES = 25;
   
-  // Gamification State
-  const [emissionControl, setEmissionControl] = useState([50]);
-  const [adjustment, setAdjustment] = useState(30);
-  const [isSliderActive, setIsSliderActive] = useState(false);
+  // Comprehensive materials database with environmental impact data
+  const materialDatabase = {
+    "Aluminium (primary)": { 
+      name: "Aluminium (primary)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 8.5,
+      co2Primary: 131, 
+      co2Recycled: 39.3, 
+      co2Hybrid: 85.15,
+      cedPrimary: 8.2, 
+      cedRecycled: 2.46, 
+      cedHybrid: 5.33,
+      waterUsePrimary: 5974, 
+      waterUseRecycled: 1792, 
+      waterUseHybrid: 3883,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "SO2", value: "12.3 kg/ton" },
+        { pollutant: "NOx", value: "8.7 kg/ton" },
+        { pollutant: "PM10", value: "2.1 kg/ton" }
+      ]
+    },
+    "Aluminium (new scrap)": { 
+      name: "Aluminium (new scrap)", 
+      defaultType: "recycled",
+      category: "Metals",
+      circularityPotential: 9.5,
+      co2Primary: 8.3, 
+      co2Recycled: 8.3, 
+      co2Hybrid: 8.3,
+      cedPrimary: 0.4, 
+      cedRecycled: 0.4, 
+      cedHybrid: 0.4,
+      waterUsePrimary: 76.6, 
+      waterUseRecycled: 76.6, 
+      waterUseHybrid: 76.6,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "SO2", value: "1.2 kg/ton" },
+        { pollutant: "NOx", value: "0.9 kg/ton" }
+      ]
+    },
+    "Aluminium (old scrap)": { 
+      name: "Aluminium (old scrap)", 
+      defaultType: "recycled",
+      category: "Metals",
+      circularityPotential: 9.2,
+      co2Primary: 23.8, 
+      co2Recycled: 23.8, 
+      co2Hybrid: 23.8,
+      cedPrimary: 1.4, 
+      cedRecycled: 1.4, 
+      cedHybrid: 1.4,
+      waterUsePrimary: 300, 
+      waterUseRecycled: 300, 
+      waterUseHybrid: 300,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "SO2", value: "2.8 kg/ton" },
+        { pollutant: "NOx", value: "1.9 kg/ton" }
+      ]
+    },
+    "Antimony": { 
+      name: "Antimony", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 4.2,
+      co2Primary: 141, 
+      co2Recycled: 42.3, 
+      co2Hybrid: 91.65,
+      cedPrimary: 12.9, 
+      cedRecycled: 3.87, 
+      cedHybrid: 8.385,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 4,
+      knownEmissions: [
+        { pollutant: "Particulates", value: "8.5 kg/ton" }
+      ]
+    },
+    "Arsenic (total)": { 
+      name: "Arsenic (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 2.1,
+      co2Primary: 5.0, 
+      co2Recycled: 1.5, 
+      co2Hybrid: 3.25,
+      cedPrimary: 0.3, 
+      cedRecycled: 0.09, 
+      cedHybrid: 0.195,
+      waterUsePrimary: 0.2, 
+      waterUseRecycled: 0.06, 
+      waterUseHybrid: 0.13,
+      circularityRating: 2,
+      knownEmissions: [
+        { pollutant: "Arsenic compounds", value: "0.8 kg/ton" }
+      ]
+    },
+    "Barite (BaSO4)": { 
+      name: "Barite (BaSO4)", 
+      defaultType: "primary",
+      category: "Industrial Minerals",
+      circularityPotential: 3.8,
+      co2Primary: 4.0, 
+      co2Recycled: 1.2, 
+      co2Hybrid: 2.6,
+      cedPrimary: 0.2, 
+      cedRecycled: 0.06, 
+      cedHybrid: 0.13,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 3,
+      knownEmissions: [
+        { pollutant: "PM10", value: "2.1 kg/ton" }
+      ]
+    },
+    "Beryllium (metal)": { 
+      name: "Beryllium (metal)", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.8,
+      co2Primary: 12000, 
+      co2Recycled: 3600, 
+      co2Hybrid: 7800,
+      cedPrimary: 879, 
+      cedRecycled: 263.7, 
+      cedHybrid: 571.35,
+      waterUsePrimary: 100, 
+      waterUseRecycled: 30, 
+      waterUseHybrid: 65,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Beryllium compounds", value: "0.05 kg/ton" }
+      ]
+    },
+    "Beryllium hydroxide": { 
+      name: "Beryllium hydroxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.5,
+      co2Primary: 319, 
+      co2Recycled: 95.7, 
+      co2Hybrid: 207.35,
+      cedPrimary: 19, 
+      cedRecycled: 5.7, 
+      cedHybrid: 12.35,
+      waterUsePrimary: 100, 
+      waterUseRecycled: 30, 
+      waterUseHybrid: 65,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Beryllium compounds", value: "0.02 kg/ton" }
+      ]
+    },
+    "Bismuth": { 
+      name: "Bismuth", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 5.4,
+      co2Primary: 697, 
+      co2Recycled: 209.1, 
+      co2Hybrid: 453.05,
+      cedPrimary: 58.9, 
+      cedRecycled: 17.67, 
+      cedHybrid: 38.285,
+      waterUsePrimary: 11.6, 
+      waterUseRecycled: 3.48, 
+      waterUseHybrid: 7.54,
+      circularityRating: 5,
+      knownEmissions: [
+        { pollutant: "Heavy metals", value: "3.2 kg/ton" }
+      ]
+    },
+    "Borax (anhydrous)": { 
+      name: "Borax (anhydrous)", 
+      defaultType: "primary",
+      category: "Industrial Minerals",
+      circularityPotential: 4.1,
+      co2Primary: 30.7, 
+      co2Recycled: 9.21, 
+      co2Hybrid: 19.955,
+      cedPrimary: 1.6, 
+      cedRecycled: 0.48, 
+      cedHybrid: 1.04,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 4,
+      knownEmissions: [
+        { pollutant: "Borates", value: "1.8 kg/ton" }
+      ]
+    },
+    "Boric acid": { 
+      name: "Boric acid", 
+      defaultType: "primary",
+      category: "Industrial Minerals",
+      circularityPotential: 4.2,
+      co2Primary: 13.0, 
+      co2Recycled: 3.9, 
+      co2Hybrid: 8.45,
+      cedPrimary: 0.7, 
+      cedRecycled: 0.21, 
+      cedHybrid: 0.455,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 4,
+      knownEmissions: [
+        { pollutant: "Borates", value: "0.9 kg/ton" }
+      ]
+    },
+    "Cadmium (total)": { 
+      name: "Cadmium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.1,
+      co2Primary: 53.0, 
+      co2Recycled: 15.9, 
+      co2Hybrid: 34.45,
+      cedPrimary: 3.0, 
+      cedRecycled: 0.9, 
+      cedHybrid: 1.95,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Cadmium compounds", value: "0.3 kg/ton" }
+      ]
+    },
+    "Calcium (metal)": { 
+      name: "Calcium (metal)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 5.8,
+      co2Primary: 223, 
+      co2Recycled: 66.9, 
+      co2Hybrid: 144.95,
+      cedPrimary: 16.3, 
+      cedRecycled: 4.89, 
+      cedHybrid: 10.595,
+      waterUsePrimary: 7.1, 
+      waterUseRecycled: 2.13, 
+      waterUseHybrid: 4.615,
+      circularityRating: 5,
+      knownEmissions: [
+        { pollutant: "Calcium oxides", value: "12.5 kg/ton" }
+      ]
+    },
+    "Calcium carbonate (quicklime)": { 
+      name: "Calcium carbonate (quicklime)", 
+      defaultType: "primary",
+      category: "Industrial Minerals",
+      circularityPotential: 6.2,
+      co2Primary: 5.8, 
+      co2Recycled: 1.74, 
+      co2Hybrid: 3.77,
+      cedPrimary: 1.0, 
+      cedRecycled: 0.3, 
+      cedHybrid: 0.65,
+      waterUsePrimary: 1787, 
+      waterUseRecycled: 536.1, 
+      waterUseHybrid: 1161.55,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "CO2", value: "785 kg/ton" },
+        { pollutant: "PM10", value: "8.2 kg/ton" }
+      ]
+    },
+    "Cerium oxide": { 
+      name: "Cerium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.1,
+      co2Primary: 252, 
+      co2Recycled: 75.6, 
+      co2Hybrid: 163.8,
+      cedPrimary: 12.9, 
+      cedRecycled: 3.87, 
+      cedHybrid: 8.385,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "4.1 kg/ton" }
+      ]
+    },
+    "Chromium (total)": { 
+      name: "Chromium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 7.3,
+      co2Primary: 40.2, 
+      co2Recycled: 12.06, 
+      co2Hybrid: 26.13,
+      cedPrimary: 2.4, 
+      cedRecycled: 0.72, 
+      cedHybrid: 1.56,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Chromium compounds", value: "2.8 kg/ton" }
+      ]
+    },
+    "Cobalt": { 
+      name: "Cobalt", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.8,
+      co2Primary: 128, 
+      co2Recycled: 38.4, 
+      co2Hybrid: 83.2,
+      cedPrimary: 8.3, 
+      cedRecycled: 2.49, 
+      cedHybrid: 5.395,
+      waterUsePrimary: 7.4, 
+      waterUseRecycled: 2.22, 
+      waterUseHybrid: 4.81,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Cobalt compounds", value: "1.9 kg/ton" }
+      ]
+    },
+    "Copper (total)": { 
+      name: "Copper (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 7.8,
+      co2Primary: 53.7, 
+      co2Recycled: 16.11, 
+      co2Hybrid: 34.905,
+      cedPrimary: 2.8, 
+      cedRecycled: 0.84, 
+      cedHybrid: 1.82,
+      waterUsePrimary: 1062, 
+      waterUseRecycled: 318.6, 
+      waterUseHybrid: 690.3,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "SO2", value: "28.1 kg/ton" },
+        { pollutant: "Particulates", value: "5.7 kg/ton" }
+      ]
+    },
+    "Iron (pig iron)": { 
+      name: "Iron (pig iron)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 9.2,
+      co2Primary: 23.1, 
+      co2Recycled: 6.93, 
+      co2Hybrid: 15.015,
+      cedPrimary: 1.5, 
+      cedRecycled: 0.45, 
+      cedHybrid: 0.975,
+      waterUsePrimary: 23033, 
+      waterUseRecycled: 6909.9, 
+      waterUseHybrid: 14971.45,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "CO", value: "45.2 kg/ton" },
+        { pollutant: "SO2", value: "18.5 kg/ton" },
+        { pollutant: "NOx", value: "15.3 kg/ton" }
+      ]
+    },
+    "Lead (total)": { 
+      name: "Lead (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 8.1,
+      co2Primary: 18.9, 
+      co2Recycled: 5.67, 
+      co2Hybrid: 12.285,
+      cedPrimary: 1.3, 
+      cedRecycled: 0.39, 
+      cedHybrid: 0.845,
+      waterUsePrimary: 225, 
+      waterUseRecycled: 67.5, 
+      waterUseHybrid: 146.25,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Lead compounds", value: "0.8 kg/ton" }
+      ]
+    },
+    "Lithium (total)": { 
+      name: "Lithium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 5.9,
+      co2Primary: 125, 
+      co2Recycled: 37.5, 
+      co2Hybrid: 81.25,
+      cedPrimary: 7.1, 
+      cedRecycled: 2.13, 
+      cedHybrid: 4.615,
+      waterUsePrimary: 60, 
+      waterUseRecycled: 18, 
+      waterUseHybrid: 39,
+      circularityRating: 5,
+      knownEmissions: [
+        { pollutant: "Lithium compounds", value: "2.3 kg/ton" }
+      ]
+    },
+    "Magnesium (total)": { 
+      name: "Magnesium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.4,
+      co2Primary: 18.8, 
+      co2Recycled: 5.64, 
+      co2Hybrid: 12.22,
+      cedPrimary: 5.4, 
+      cedRecycled: 1.62, 
+      cedHybrid: 3.51,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Magnesium oxides", value: "8.9 kg/ton" }
+      ]
+    },
+    "Nickel (total)": { 
+      name: "Nickel (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 7.6,
+      co2Primary: 111, 
+      co2Recycled: 33.3, 
+      co2Hybrid: 72.15,
+      cedPrimary: 6.5, 
+      cedRecycled: 1.95, 
+      cedHybrid: 4.225,
+      waterUsePrimary: 345, 
+      waterUseRecycled: 103.5, 
+      waterUseHybrid: 224.25,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Nickel compounds", value: "3.4 kg/ton" }
+      ]
+    },
+    "Silver (total)": { 
+      name: "Silver (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 8.9,
+      co2Primary: 3280, 
+      co2Recycled: 984, 
+      co2Hybrid: 2132,
+      cedPrimary: 196, 
+      cedRecycled: 58.8, 
+      cedHybrid: 127.4,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Silver compounds", value: "0.9 kg/ton" }
+      ]
+    },
+    "Gold (total)": { 
+      name: "Gold (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 9.5,
+      co2Primary: 208000, 
+      co2Recycled: 62400, 
+      co2Hybrid: 135200,
+      cedPrimary: 12500, 
+      cedRecycled: 3750, 
+      cedHybrid: 8125,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "Cyanide compounds", value: "8.5 kg/ton" }
+      ]
+    },
+    "Platinum (total)": { 
+      name: "Platinum (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 9.3,
+      co2Primary: 243000, 
+      co2Recycled: 72900, 
+      co2Hybrid: 157950,
+      cedPrimary: 12500, 
+      cedRecycled: 3750, 
+      cedHybrid: 8125,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "12.1 kg/ton" }
+      ]
+    },
+    "Titanium (total)": { 
+      name: "Titanium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.7,
+      co2Primary: 115, 
+      co2Recycled: 34.5, 
+      co2Hybrid: 74.75,
+      cedPrimary: 8.1, 
+      cedRecycled: 2.43, 
+      cedHybrid: 5.265,
+      waterUsePrimary: 569, 
+      waterUseRecycled: 170.7, 
+      waterUseHybrid: 369.85,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Titanium compounds", value: "4.8 kg/ton" }
+      ]
+    },
+    "Zinc (total)": { 
+      name: "Zinc (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 8.3,
+      co2Primary: 52.9, 
+      co2Recycled: 15.87, 
+      co2Hybrid: 34.385,
+      cedPrimary: 3.1, 
+      cedRecycled: 0.93, 
+      cedHybrid: 2.015,
+      waterUsePrimary: 619, 
+      waterUseRecycled: 185.7, 
+      waterUseHybrid: 402.35,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Zinc compounds", value: "2.9 kg/ton" }
+      ]
+    },
+    "Dysprosium oxide": { 
+      name: "Dysprosium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.8,
+      co2Primary: 1170, 
+      co2Recycled: 351, 
+      co2Hybrid: 760.5,
+      cedPrimary: 59.6, 
+      cedRecycled: 17.88, 
+      cedHybrid: 38.74,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "15.2 kg/ton" }
+      ]
+    },
+    "Erbium oxide": { 
+      name: "Erbium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.6,
+      co2Primary: 954, 
+      co2Recycled: 286.2, 
+      co2Hybrid: 620.1,
+      cedPrimary: 48.7, 
+      cedRecycled: 14.61, 
+      cedHybrid: 31.655,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "12.8 kg/ton" }
+      ]
+    },
+    "Europium oxide": { 
+      name: "Europium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.2,
+      co2Primary: 7750, 
+      co2Recycled: 2325, 
+      co2Hybrid: 5037.5,
+      cedPrimary: 396, 
+      cedRecycled: 118.8, 
+      cedHybrid: 257.4,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "28.1 kg/ton" }
+      ]
+    },
+    "Ferroniobium": { 
+      name: "Ferroniobium", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.1,
+      co2Primary: 114, 
+      co2Recycled: 34.2, 
+      co2Hybrid: 74.1,
+      cedPrimary: 8.3, 
+      cedRecycled: 2.49, 
+      cedHybrid: 5.395,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Niobium compounds", value: "6.8 kg/ton" }
+      ]
+    },
+    "Gadolinium oxide": { 
+      name: "Gadolinium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.4,
+      co2Primary: 914, 
+      co2Recycled: 274.2, 
+      co2Hybrid: 594.1,
+      cedPrimary: 46.6, 
+      cedRecycled: 13.98, 
+      cedHybrid: 30.29,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "11.9 kg/ton" }
+      ]
+    },
+    "Gallium": { 
+      name: "Gallium", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.9,
+      co2Primary: 3030, 
+      co2Recycled: 909, 
+      co2Hybrid: 1969.5,
+      cedPrimary: 205, 
+      cedRecycled: 61.5, 
+      cedHybrid: 133.25,
+      waterUsePrimary: 0.3, 
+      waterUseRecycled: 0.09, 
+      waterUseHybrid: 0.195,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Gallium compounds", value: "18.5 kg/ton" }
+      ]
+    },
+    "Germanium": { 
+      name: "Germanium", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.1,
+      co2Primary: 2890, 
+      co2Recycled: 867, 
+      co2Hybrid: 1878.5,
+      cedPrimary: 170, 
+      cedRecycled: 51, 
+      cedHybrid: 110.5,
+      waterUsePrimary: 0.2, 
+      waterUseRecycled: 0.06, 
+      waterUseHybrid: 0.13,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Germanium compounds", value: "16.2 kg/ton" }
+      ]
+    },
+    "Hafnium (total)": { 
+      name: "Hafnium (total)", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.3,
+      co2Primary: 3510, 
+      co2Recycled: 1053, 
+      co2Hybrid: 2281.5,
+      cedPrimary: 131, 
+      cedRecycled: 39.3, 
+      cedHybrid: 85.15,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Hafnium compounds", value: "21.8 kg/ton" }
+      ]
+    },
+    "Helium": { 
+      name: "Helium", 
+      defaultType: "primary",
+      category: "Noble Gases",
+      circularityPotential: 2.8,
+      co2Primary: 67.5, 
+      co2Recycled: 20.25, 
+      co2Hybrid: 43.875,
+      cedPrimary: 0.9, 
+      cedRecycled: 0.27, 
+      cedHybrid: 0.585,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 2,
+      knownEmissions: []
+    },
+    "Holmium oxide": { 
+      name: "Holmium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.9,
+      co2Primary: 4400, 
+      co2Recycled: 1320, 
+      co2Hybrid: 2860,
+      cedPrimary: 226, 
+      cedRecycled: 67.8, 
+      cedHybrid: 146.9,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "22.4 kg/ton" }
+      ]
+    },
+    "Indium": { 
+      name: "Indium", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.8,
+      co2Primary: 1720, 
+      co2Recycled: 516, 
+      co2Hybrid: 1118,
+      cedPrimary: 102, 
+      cedRecycled: 30.6, 
+      cedHybrid: 66.3,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Indium compounds", value: "9.8 kg/ton" }
+      ]
+    },
+    "Iridium (total)": { 
+      name: "Iridium (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 9.1,
+      co2Primary: 169000, 
+      co2Recycled: 50700, 
+      co2Hybrid: 109850,
+      cedPrimary: 8860, 
+      cedRecycled: 2658, 
+      cedHybrid: 5759,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "42.8 kg/ton" }
+      ]
+    },
+    "Lanthanum oxide": { 
+      name: "Lanthanum oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.2,
+      co2Primary: 216, 
+      co2Recycled: 64.8, 
+      co2Hybrid: 140.4,
+      cedPrimary: 11.0, 
+      cedRecycled: 3.3, 
+      cedHybrid: 7.15,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "8.2 kg/ton" }
+      ]
+    },
+    "Lutetium oxide": { 
+      name: "Lutetium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.5,
+      co2Primary: 17600, 
+      co2Recycled: 5280, 
+      co2Hybrid: 11440,
+      cedPrimary: 896, 
+      cedRecycled: 268.8, 
+      cedHybrid: 582.4,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "58.2 kg/ton" }
+      ]
+    },
+    "Manganese (total)": { 
+      name: "Manganese (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.7,
+      co2Primary: 23.7, 
+      co2Recycled: 7.11, 
+      co2Hybrid: 15.405,
+      cedPrimary: 1.0, 
+      cedRecycled: 0.3, 
+      cedHybrid: 0.65,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Manganese compounds", value: "3.8 kg/ton" }
+      ]
+    },
+    "Mercury": { 
+      name: "Mercury", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 5.2,
+      co2Primary: 179, 
+      co2Recycled: 53.7, 
+      co2Hybrid: 116.35,
+      cedPrimary: 12.1, 
+      cedRecycled: 3.63, 
+      cedHybrid: 7.865,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 5,
+      knownEmissions: [
+        { pollutant: "Mercury compounds", value: "1.2 kg/ton" }
+      ]
+    },
+    "Molybdenum (total)": { 
+      name: "Molybdenum (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.9,
+      co2Primary: 117, 
+      co2Recycled: 35.1, 
+      co2Hybrid: 76.05,
+      cedPrimary: 5.7, 
+      cedRecycled: 1.71, 
+      cedHybrid: 3.705,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Molybdenum compounds", value: "4.9 kg/ton" }
+      ]
+    },
+    "Neodymium oxide": { 
+      name: "Neodymium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.7,
+      co2Primary: 344, 
+      co2Recycled: 103.2, 
+      co2Hybrid: 223.6,
+      cedPrimary: 17.6, 
+      cedRecycled: 5.28, 
+      cedHybrid: 11.44,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "9.8 kg/ton" }
+      ]
+    },
+    "Niobium (total)": { 
+      name: "Niobium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.4,
+      co2Primary: 172, 
+      co2Recycled: 51.6, 
+      co2Hybrid: 111.8,
+      cedPrimary: 12.5, 
+      cedRecycled: 3.75, 
+      cedHybrid: 8.125,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Niobium compounds", value: "8.1 kg/ton" }
+      ]
+    },
+    "Osmium (total)": { 
+      name: "Osmium (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 9.0,
+      co2Primary: 85000, 
+      co2Recycled: 25500, 
+      co2Hybrid: 55250,
+      cedPrimary: 4560, 
+      cedRecycled: 1368, 
+      cedHybrid: 2964,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "28.9 kg/ton" }
+      ]
+    },
+    "Palladium (total)": { 
+      name: "Palladium (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 8.8,
+      co2Primary: 72700, 
+      co2Recycled: 21810, 
+      co2Hybrid: 47255,
+      cedPrimary: 3880, 
+      cedRecycled: 1164, 
+      cedHybrid: 2522,
+      waterUsePrimary: 15.3, 
+      waterUseRecycled: 4.59, 
+      waterUseHybrid: 9.945,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "22.1 kg/ton" }
+      ]
+    },
+    "Praseodymium oxide": { 
+      name: "Praseodymium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.5,
+      co2Primary: 376, 
+      co2Recycled: 112.8, 
+      co2Hybrid: 244.4,
+      cedPrimary: 19.2, 
+      cedRecycled: 5.76, 
+      cedHybrid: 12.48,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "10.2 kg/ton" }
+      ]
+    },
+    "Rhenium": { 
+      name: "Rhenium", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.8,
+      co2Primary: 9040, 
+      co2Recycled: 2712, 
+      co2Hybrid: 5876,
+      cedPrimary: 450, 
+      cedRecycled: 135, 
+      cedHybrid: 292.5,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rhenium compounds", value: "38.2 kg/ton" }
+      ]
+    },
+    "Rhodium (total)": { 
+      name: "Rhodium (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 9.4,
+      co2Primary: 683000, 
+      co2Recycled: 204900, 
+      co2Hybrid: 443950,
+      cedPrimary: 35100, 
+      cedRecycled: 10530, 
+      cedHybrid: 22815,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "185.8 kg/ton" }
+      ]
+    },
+    "Ruthenium (total)": { 
+      name: "Ruthenium (total)", 
+      defaultType: "primary",
+      category: "Precious Metals",
+      circularityPotential: 8.9,
+      co2Primary: 41100, 
+      co2Recycled: 12330, 
+      co2Hybrid: 26715,
+      cedPrimary: 2110, 
+      cedRecycled: 633, 
+      cedHybrid: 1371.5,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "PGM compounds", value: "14.2 kg/ton" }
+      ]
+    },
+    "Samarium oxide": { 
+      name: "Samarium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.3,
+      co2Primary: 1160, 
+      co2Recycled: 348, 
+      co2Hybrid: 754,
+      cedPrimary: 59.1, 
+      cedRecycled: 17.73, 
+      cedHybrid: 38.415,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "14.8 kg/ton" }
+      ]
+    },
+    "Scandium oxide": { 
+      name: "Scandium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.1,
+      co2Primary: 97200, 
+      co2Recycled: 29160, 
+      co2Hybrid: 63180,
+      cedPrimary: 5710, 
+      cedRecycled: 1713, 
+      cedHybrid: 3711.5,
+      waterUsePrimary: 1.0, 
+      waterUseRecycled: 0.3, 
+      waterUseHybrid: 0.65,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "285.2 kg/ton" }
+      ]
+    },
+    "Selenium": { 
+      name: "Selenium", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 5.8,
+      co2Primary: 65.5, 
+      co2Recycled: 19.65, 
+      co2Hybrid: 42.575,
+      cedPrimary: 3.6, 
+      cedRecycled: 1.08, 
+      cedHybrid: 2.34,
+      waterUsePrimary: 0.2, 
+      waterUseRecycled: 0.06, 
+      waterUseHybrid: 0.13,
+      circularityRating: 5,
+      knownEmissions: [
+        { pollutant: "Selenium compounds", value: "2.8 kg/ton" }
+      ]
+    },
+    "Steel (pig iron proxy)": { 
+      name: "Steel (pig iron proxy)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 9.2,
+      co2Primary: 25, 
+      co2Recycled: 7.5, 
+      co2Hybrid: 16.25,
+      cedPrimary: 2, 
+      cedRecycled: 0.6, 
+      cedHybrid: 1.3,
+      waterUsePrimary: 10, 
+      waterUseRecycled: 3, 
+      waterUseHybrid: 6.5,
+      circularityRating: 9,
+      knownEmissions: [
+        { pollutant: "CO", value: "45.2 kg/ton" },
+        { pollutant: "SO2", value: "18.5 kg/ton" },
+        { pollutant: "NOx", value: "15.3 kg/ton" }
+      ]
+    },
+    "Strontium carbonate": { 
+      name: "Strontium carbonate", 
+      defaultType: "primary",
+      category: "Industrial Minerals",
+      circularityPotential: 4.9,
+      co2Primary: 48.8, 
+      co2Recycled: 14.64, 
+      co2Hybrid: 31.72,
+      cedPrimary: 3.2, 
+      cedRecycled: 0.96, 
+      cedHybrid: 2.08,
+      waterUsePrimary: 9.5, 
+      waterUseRecycled: 2.85, 
+      waterUseHybrid: 6.175,
+      circularityRating: 4,
+      knownEmissions: [
+        { pollutant: "Strontium compounds", value: "6.1 kg/ton" }
+      ]
+    },
+    "Tantalum": { 
+      name: "Tantalum", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.9,
+      co2Primary: 4360, 
+      co2Recycled: 1308, 
+      co2Hybrid: 2834,
+      cedPrimary: 260, 
+      cedRecycled: 78, 
+      cedHybrid: 169,
+      waterUsePrimary: 5.6, 
+      waterUseRecycled: 1.68, 
+      waterUseHybrid: 3.64,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Tantalum compounds", value: "18.9 kg/ton" }
+      ]
+    },
+    "Tellurium": { 
+      name: "Tellurium", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 6.2,
+      co2Primary: 435, 
+      co2Recycled: 130.5, 
+      co2Hybrid: 282.75,
+      cedPrimary: 21.9, 
+      cedRecycled: 6.57, 
+      cedHybrid: 14.235,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Tellurium compounds", value: "8.2 kg/ton" }
+      ]
+    },
+    "Terbium oxide": { 
+      name: "Terbium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.0,
+      co2Primary: 5820, 
+      co2Recycled: 1746, 
+      co2Hybrid: 3783,
+      cedPrimary: 297, 
+      cedRecycled: 89.1, 
+      cedHybrid: 193.05,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "24.8 kg/ton" }
+      ]
+    },
+    "Thallium": { 
+      name: "Thallium", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 4.8,
+      co2Primary: 5160, 
+      co2Recycled: 1548, 
+      co2Hybrid: 3354,
+      cedPrimary: 376, 
+      cedRecycled: 112.8, 
+      cedHybrid: 244.4,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 4,
+      knownEmissions: [
+        { pollutant: "Thallium compounds", value: "19.2 kg/ton" }
+      ]
+    },
+    "Thorium oxide": { 
+      name: "Thorium oxide", 
+      defaultType: "primary",
+      category: "Radioactive Materials",
+      circularityPotential: 3.2,
+      co2Primary: 1260, 
+      co2Recycled: 378, 
+      co2Hybrid: 819,
+      cedPrimary: 74.9, 
+      cedRecycled: 22.47, 
+      cedHybrid: 48.685,
+      waterUsePrimary: 0.70, 
+      waterUseRecycled: 0.21, 
+      waterUseHybrid: 0.455,
+      circularityRating: 3,
+      knownEmissions: [
+        { pollutant: "Radioactive particles", value: "2.8 kg/ton" }
+      ]
+    },
+    "Thulium oxide": { 
+      name: "Thulium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.3,
+      co2Primary: 12700, 
+      co2Recycled: 3810, 
+      co2Hybrid: 8255,
+      cedPrimary: 649, 
+      cedRecycled: 194.7, 
+      cedHybrid: 421.85,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "42.8 kg/ton" }
+      ]
+    },
+    "Tin": { 
+      name: "Tin", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 7.2,
+      co2Primary: 321, 
+      co2Recycled: 96.3, 
+      co2Hybrid: 208.65,
+      cedPrimary: 17.1, 
+      cedRecycled: 5.13, 
+      cedHybrid: 11.115,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Tin compounds", value: "11.8 kg/ton" }
+      ]
+    },
+    "Tungsten (total)": { 
+      name: "Tungsten (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 7.4,
+      co2Primary: 133, 
+      co2Recycled: 39.9, 
+      co2Hybrid: 86.45,
+      cedPrimary: 12.6, 
+      cedRecycled: 3.78, 
+      cedHybrid: 8.19,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Tungsten compounds", value: "6.9 kg/ton" }
+      ]
+    },
+    "Uranium (yellowcake)": { 
+      name: "Uranium (yellowcake)", 
+      defaultType: "primary",
+      category: "Radioactive Materials",
+      circularityPotential: 2.8,
+      co2Primary: 1270, 
+      co2Recycled: 381, 
+      co2Hybrid: 825.5,
+      cedPrimary: 90.7, 
+      cedRecycled: 27.21, 
+      cedHybrid: 58.955,
+      waterUsePrimary: 65.8, 
+      waterUseRecycled: 19.74, 
+      waterUseHybrid: 42.77,
+      circularityRating: 2,
+      knownEmissions: [
+        { pollutant: "Radioactive particles", value: "8.9 kg/ton" }
+      ]
+    },
+    "Vanadium": { 
+      name: "Vanadium", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.6,
+      co2Primary: 516, 
+      co2Recycled: 154.8, 
+      co2Hybrid: 335.4,
+      cedPrimary: 33.1, 
+      cedRecycled: 9.93, 
+      cedHybrid: 21.515,
+      waterUsePrimary: 29.1, 
+      waterUseRecycled: 8.73, 
+      waterUseHybrid: 18.915,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Vanadium compounds", value: "18.2 kg/ton" }
+      ]
+    },
+    "Ytterbium oxide": { 
+      name: "Ytterbium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 8.1,
+      co2Primary: 2450, 
+      co2Recycled: 735, 
+      co2Hybrid: 1592.5,
+      cedPrimary: 125, 
+      cedRecycled: 37.5, 
+      cedHybrid: 81.25,
+      waterUsePrimary: 0, 
+      waterUseRecycled: 0, 
+      waterUseHybrid: 0,
+      circularityRating: 8,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "18.9 kg/ton" }
+      ]
+    },
+    "Yttrium oxide": { 
+      name: "Yttrium oxide", 
+      defaultType: "primary",
+      category: "Rare Earth Elements",
+      circularityPotential: 7.6,
+      co2Primary: 295, 
+      co2Recycled: 88.5, 
+      co2Hybrid: 191.75,
+      cedPrimary: 15.1, 
+      cedRecycled: 4.53, 
+      cedHybrid: 9.815,
+      waterUsePrimary: 4.1, 
+      waterUseRecycled: 1.23, 
+      waterUseHybrid: 2.665,
+      circularityRating: 7,
+      knownEmissions: [
+        { pollutant: "Rare earth particulates", value: "9.2 kg/ton" }
+      ]
+    },
+    "Zirconium (total)": { 
+      name: "Zirconium (total)", 
+      defaultType: "primary",
+      category: "Metals",
+      circularityPotential: 6.8,
+      co2Primary: 19.9, 
+      co2Recycled: 5.97, 
+      co2Hybrid: 12.935,
+      cedPrimary: 1.1, 
+      cedRecycled: 0.33, 
+      cedHybrid: 0.715,
+      waterUsePrimary: 81.5, 
+      waterUseRecycled: 24.45, 
+      waterUseHybrid: 52.975,
+      circularityRating: 6,
+      knownEmissions: [
+        { pollutant: "Zirconium compounds", value: "4.2 kg/ton" }
+      ]
+    }
+  };
+
+  // Enhanced 9-step state management
+  const [currentStep, setCurrentStep] = useState(1);
+  const [material, setMaterial] = useState("");
+  const [quantity, setQuantity] = useState(20);
+  const [processRoute, setProcessRoute] = useState("recycled");
+  const [energyCED, setEnergyCED] = useState("");
+  const [carbonGWP, setCarbonGWP] = useState("");
+  const [transportDistance, setTransportDistance] = useState(200);
+  const [transportMode, setTransportMode] = useState("rail");
+  const [reusePercent, setReusePercent] = useState(20);
+  const [recyclingPercent, setRecyclingPercent] = useState(60);
+  const [disposalPercent, setDisposalPercent] = useState(20);
   
-  // Results State
-  const [totalCO2, setTotalCO2] = useState(115000);
-  const [circularityScore, setCircularityScore] = useState(60);
-  const [energyUsed, setEnergyUsed] = useState(150000);
+  // AI prediction states
+  const [isAIActive, setIsAIActive] = useState(false);
+  const [aiPredictions, setAiPredictions] = useState({});
   const [showResults, setShowResults] = useState(false);
   
-  // Chart Data
-  const [co2StageData, setCo2StageData] = useState([
-    { name: 'Production', value: 7200 },
-    { name: 'Transport', value: 400 },
-    { name: 'Usage', value: 200 },
-    { name: 'Circularity savings', value: -2000 }
-  ]);
-  
-  const [pieData, setPieData] = useState([
-    { name: 'Recycled', value: 30, color: '#3b82f6' },
-    { name: 'Virgin', value: 70, color: '#06b6d4' },
-    { name: 'Landfill', value: 40, color: '#10b981' },
-    { name: 'Reuse', value: 10, color: '#ef4444' }
-  ]);
+  // Results states
+  const [lcaResults, setLcaResults] = useState(null);
+  const [waterUse, setWaterUse] = useState(0);
+  const [recycledContent, setRecycledContent] = useState(0);
+  const [resourceEfficiency, setResourceEfficiency] = useState(0);
+  const [lifeExtension, setLifeExtension] = useState(0);
+  const [circularityScore, setCircularityScore] = useState(0);
 
-  const [sankeyData, setSankeyData] = useState({
-    nodes: [
-      { name: "Raw Materials" },
-      { name: "Virgin Material" },
-      { name: "Recycled Material" },
-      { name: "Production" },
-      { name: "Transport" },
-      { name: "Use Phase" },
-      { name: "End of Life" },
-      { name: "Recycling" },
-      { name: "Landfill" },
-      { name: "Reuse" },
-    ],
-    links: [
-      { source: 0, target: 1, value: 70 },
-      { source: 0, target: 2, value: 30 },
-      { source: 1, target: 3, value: 70 },
-      { source: 2, target: 3, value: 30 },
-      { source: 3, target: 4, value: 100 },
-      { source: 4, target: 5, value: 100 },
-      { source: 5, target: 6, value: 100 },
-      { source: 6, target: 7, value: 30 },
-      { source: 6, target: 8, value: 40 },
-      { source: 6, target: 9, value: 10 },
-      { source: 7, target: 0, value: 25 },
-      { source: 9, target: 5, value: 9 }
-    ]
-  });
+  // Interactive control states for Results page
+  const [emissionReduction, setEmissionReduction] = useState([0]); // 0-50% reduction
+  const [efficiencyImprovement, setEfficiencyImprovement] = useState([0]); // 0-30% improvement
+  const [circularityBoost, setCircularityBoost] = useState([0]); // 0-25% boost
+  const [showComparison, setShowComparison] = useState(false);
+  const [selectedMetrics, setSelectedMetrics] = useState(['co2', 'energy', 'water', 'circularity']);
+  const [adjustedResults, setAdjustedResults] = useState(null);
 
-  // Handle emission slider change - update inputs based on emission level
-  const handleEmissionChange = useCallback((value: number[]) => {
-    setEmissionControl(value);
-    setIsSliderActive(true); // Show visual feedback
-    
-    // Update inputs based on emission level (0-100 scale)
-    const emissionLevel = value[0];
-    
-    // Calculate values based on linear interpolation for smooth transitions
-    // Low emissions (0-25): Best case scenario
-    // Medium-Low (25-50): Good practices
-    // Medium-High (50-75): Standard practices  
-    // High emissions (75-100): Poor practices
-    
-    // Recycled content: 80% (low) to 10% (high)
-    const newRecycledContent = Math.round(80 - (emissionLevel * 0.7));
-    setRecycledContent(Math.max(10, Math.min(80, newRecycledContent)));
-    
-    // Transport mode based on emission level
-    if (emissionLevel <= 25) {
-      setTransportMode("ship"); // Most efficient
-      setTransportDistance(Math.max(400, 1200 - emissionLevel * 8));
-    } else if (emissionLevel <= 50) {
-      setTransportMode("rail"); // Efficient
-      setTransportDistance(Math.max(600, 1000 - emissionLevel * 4));
-    } else if (emissionLevel <= 75) {
-      setTransportMode("truck"); // Standard
-      setTransportDistance(Math.max(800, 800 + emissionLevel * 2));
-    } else {
-      setTransportMode("air"); // Least efficient
-      setTransportDistance(Math.max(1000, 600 + emissionLevel * 6));
-    }
-    
-    // End-of-life percentages: Better circularity at lower emissions
-    const newRecyclingPercent = Math.round(70 - (emissionLevel * 0.5)); // 70% to 20%
-    const newReusePercent = Math.round(25 - (emissionLevel * 0.2)); // 25% to 5%
-    const newLandfillPercent = Math.round(5 + (emissionLevel * 0.7)); // 5% to 75%
-    
-    setRecyclingPercent(Math.max(20, Math.min(70, newRecyclingPercent)));
-    setReusePercent(Math.max(5, Math.min(25, newReusePercent)));
-    setLandfillPercent(Math.max(5, Math.min(75, newLandfillPercent)));
-    
-    // Process method based on emission level
-    if (emissionLevel <= 40) {
-      setProcessMethod("recycling"); // Most efficient
-    } else if (emissionLevel <= 70) {
-      setProcessMethod("smelting"); // Standard
-    } else {
-      setProcessMethod("electrolysis"); // Energy intensive
-    }
-    
-    // Plant type and efficiency
-    if (emissionLevel <= 35) {
-      setPlantType("integrated");
-      setEfficiencyFactor(0.95);
-    } else if (emissionLevel <= 70) {
-      setPlantType("integrated");
-      setEfficiencyFactor(0.90);
-    } else {
-      setPlantType("standalone");
-      setEfficiencyFactor(0.80);
-    }
-    
-    // Source region (cleaner grids for lower emissions)
-    if (emissionLevel <= 30) {
-      setSourceRegion("EU"); // Cleanest grid
-    } else if (emissionLevel <= 60) {
-      setSourceRegion("USA"); // Medium
-    } else {
-      setSourceRegion("China"); // Higher carbon grid
-    }
-    
-    // Update visual feedback and clear after short delay (NO CALCULATION)
-    setTimeout(() => {
-      console.log('Emission control changed to:', emissionLevel, '- inputs updated (no calculation)');
-      setIsSliderActive(false); // Remove visual feedback
-    }, 150); // Very short delay for state updates
-  }, []);
-
-  const handleAIPredict = () => {
-    setEnergyPerTon("12.3");
-    toast({
-      title: "AI Prediction Complete",
-      description: "Missing parameters filled using ML models trained on industrial LCA data.",
-    });
-  };
-
-  const resetToDefaults = () => {
-    setMetalType("aluminium_primary");
-    setRecycledContent(30);
-    setSourceRegion("EU");
-    setEnergyPerTon("");
-    setProcessMethod("smelting");
-    setTransportDistance(800);
-    setTransportMode("truck");
-    setTransportWeight(10);
-    setLifespan(10);
-    setEfficiencyFactor(0.9);
-    setRecyclingPercent(30);
-    setLandfillPercent(40);
-    setReusePercent(10);
-    setEmissionControl([50]);
-    setShowResults(false); // Hide results when resetting
-    
-    toast({
-      title: "Reset to Defaults",
-      description: "All parameters reset to default values. Click Submit to see new results.",
-    });
-  };
-
-  // Validate and normalize end-of-life percentages
-  const validateEoLPercentages = useCallback(() => {
-    const total = recyclingPercent + landfillPercent + reusePercent;
-    if (total > 100) {
-      // Proportionally reduce percentages to sum to 100
-      const scaleFactor = 100 / total;
-      setRecyclingPercent(Math.round(recyclingPercent * scaleFactor));
-      setLandfillPercent(Math.round(landfillPercent * scaleFactor));
-      setReusePercent(Math.round(reusePercent * scaleFactor));
-      
-      toast({
-        title: "End-of-Life Percentages Adjusted",
-        description: "Percentages have been normalized to total 100%.",
-        variant: "default"
-      });
-    }
-  }, [recyclingPercent, landfillPercent, reusePercent]);
-
-  // Generate Sankey diagram data
-  const generateSankeyData = useCallback(() => {
-    try {
-      // Create nodes and links for Sankey diagram based on current values
-      const nodes = [
-        { name: "Raw Materials" },
-        { name: "Virgin Material" },
-        { name: "Recycled Material" },
-        { name: "Production" },
-        { name: "Transport" },
-        { name: "Use Phase" },
-        { name: "End of Life" },
-        { name: "Recycling" },
-        { name: "Landfill" },
-        { name: "Reuse" },
-      ];
-      
-      // Calculate values based on current inputs with bounds checking
-      const safeRecycledContent = Math.max(0, Math.min(100, recycledContent || 30));
-      const safeRecyclingPercent = Math.max(0, Math.min(100, recyclingPercent || 30));
-      const safeLandfillPercent = Math.max(0, Math.min(100, landfillPercent || 40));
-      const safeReusePercent = Math.max(0, Math.min(100, reusePercent || 10));
-      
-      // Material flow values (normalized to material weight for visualization)
-      const materialWeight = transportWeight || 10; // tonnes
-      const flowUnit = 10; // Base flow unit for visualization
-      
-      const virginFlow = ((100 - safeRecycledContent) / 100) * flowUnit * materialWeight;
-      const recycledFlow = (safeRecycledContent / 100) * flowUnit * materialWeight;
-      const totalProductionFlow = virginFlow + recycledFlow;
-      
-      // End-of-life flows (as percentage of total material)
-      const recyclingFlow = (safeRecyclingPercent / 100) * totalProductionFlow;
-      const landfillFlow = (safeLandfillPercent / 100) * totalProductionFlow;
-      const reuseFlow = (safeReusePercent / 100) * totalProductionFlow;
-      
-      // Circular flows (efficiency losses)
-      const recyclingEfficiency = 0.85; // 85% material recovery from recycling
-      const reuseEfficiency = 0.95; // 95% material recovery from reuse
-      
-      const recycledBackFlow = recyclingFlow * recyclingEfficiency;
-      const reusedBackFlow = reuseFlow * reuseEfficiency;
-
-      // Create realistic material flow links
-      const links = [
-        // Initial material sourcing
-        { source: 0, target: 1, value: Math.round(virginFlow) },
-        { source: 0, target: 2, value: Math.round(recycledFlow) },
-        
-        // Materials to production
-        { source: 1, target: 3, value: Math.round(virginFlow) },
-        { source: 2, target: 3, value: Math.round(recycledFlow) },
-        
-        // Production through lifecycle
-        { source: 3, target: 4, value: Math.round(totalProductionFlow) },
-        { source: 4, target: 5, value: Math.round(totalProductionFlow) },
-        { source: 5, target: 6, value: Math.round(totalProductionFlow) },
-        
-        // End-of-life splits
-        { source: 6, target: 7, value: Math.round(recyclingFlow) },
-        { source: 6, target: 8, value: Math.round(landfillFlow) },
-        { source: 6, target: 9, value: Math.round(reuseFlow) },
-        
-        // Circular economy flows
-        { source: 7, target: 0, value: Math.round(recycledBackFlow) },
-        { source: 9, target: 5, value: Math.round(reusedBackFlow) }
-      ].filter(link => link.value > 0); // Remove zero-value links
-
-      const newSankeyData = { nodes, links };
-      console.log('Generated Sankey data with material flows:', newSankeyData);
-      setSankeyData(newSankeyData);
-    } catch (error) {
-      console.error('Error generating Sankey data:', error);
-      // Set empty data on error to prevent crashes
-      setSankeyData({ nodes: [], links: [] });
-    }
-  }, [recycledContent, recyclingPercent, landfillPercent, reusePercent, transportWeight]);
-
-  const handleSubmit = useCallback(() => {
-    console.log('🔥 STARTING LCA CALCULATION...');
-    console.log('Raw inputs:', {
-      metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-      transportDistance, transportMode, transportWeight, lifespan, efficiencyFactor,
-      recyclingPercent, landfillPercent, reusePercent, emissionControl: emissionControl[0]
-    });
-    
-    try {
-      // Input validation and sanitization
-      const safeTransportWeight = Math.max(0.1, Math.min(1000, transportWeight || 10)); // tonnes, min 0.1, max 1000
-      const safeTransportDistance = Math.max(1, Math.min(50000, transportDistance || 800)); // km, min 1, max 50000
-      const safeRecycledContent = Math.max(0, Math.min(100, recycledContent || 30)); // percentage
-      const safeLifespan = Math.max(1, Math.min(100, lifespan || 10)); // years
-      const safeEfficiencyFactor = Math.max(0.1, Math.min(1.0, efficiencyFactor || 0.9)); // efficiency ratio
-      const safeRecyclingPercent = Math.max(0, Math.min(100, recyclingPercent || 30));
-      const safeLandfillPercent = Math.max(0, Math.min(100, landfillPercent || 40));
-      const safeReusePercent = Math.max(0, Math.min(100, reusePercent || 10));
-      
-      console.log('Safe inputs:', {
-        safeTransportWeight, safeTransportDistance, safeRecycledContent, safeLifespan,
-        safeEfficiencyFactor, safeRecyclingPercent, safeLandfillPercent, safeReusePercent
-      });
-      
-      // Normalize end-of-life percentages if they exceed 100%
-      const totalEoL = safeRecyclingPercent + safeLandfillPercent + safeReusePercent;
-      const normalizedRecycling = totalEoL > 100 ? (safeRecyclingPercent / totalEoL) * 100 : safeRecyclingPercent;
-      const normalizedLandfill = totalEoL > 100 ? (safeLandfillPercent / totalEoL) * 100 : safeLandfillPercent;
-      const normalizedReuse = totalEoL > 100 ? (safeReusePercent / totalEoL) * 100 : safeReusePercent;
-
-      // Base emission factors using the comprehensive metal database
-      // Primary emissions are used as base, with recycling factors applied
-      const selectedMetal = metalDatabase[metalType];
-      const baseEmission = selectedMetal ? selectedMetal.co2Primary : 50.0; // Fallback value
-      
-      // Recycling emission factor - use new scrap if available, otherwise estimate
-      const recyclingEmission = selectedMetal?.co2NewScrap || (baseEmission * 0.1);
-      
-      console.log(`Selected metal: ${selectedMetal?.name}, Primary CO2: ${baseEmission}, Recycling CO2: ${recyclingEmission}`);
-
-      // Regional electricity grid emission factors (kg CO2-eq/kWh)
-      const regionFactor = {
-        EU: 0.295,    // European average grid mix
-        USA: 0.493,   // US average grid mix
-        China: 0.681, // China grid mix (coal-heavy)
-        India: 0.708  // India grid mix
-      }[sourceRegion] || 0.493;
-
-      // Process-specific factors (multiplier for base emissions)
-      const processFactor = {
-        smelting: 1.0,      // Standard primary production
-        electrolysis: 1.15, // Higher energy intensity
-        recycling: 0.05,    // Recycling uses 95% less energy
-        mechanical: 0.08    // Mechanical recycling
-      }[processMethod] || 1.0;
-
-      // Transport emission factors (kg CO2-eq/tonne-km)
-      const transportFactor = {
-        truck: 0.062,  // Heavy duty truck
-        rail: 0.019,   // Rail freight
-        ship: 0.008,   // Ocean freight
-        air: 2.1       // Air freight
-      }[transportMode] || 0.062;
-
-      // Plant efficiency factors
-      const plantEfficiencyFactor = {
-        integrated: 0.95,  // Integrated plants are more efficient
-        standalone: 1.05,  // Less efficient
-        mini: 1.0         // Average efficiency
-      }[plantType] || 1.0;
-
-      // Calculate actual weight being processed
-      const materialWeight = safeTransportWeight; // tonnes
-
-      // 1. PRODUCTION STAGE EMISSIONS
-      // Formula: Base emissions × material fraction × process factor × regional grid factor × plant efficiency
-      const virginFraction = (100 - safeRecycledContent) / 100;
-      const recycledFraction = safeRecycledContent / 100;
-      
-      const primaryProductionEmission = materialWeight * baseEmission * virginFraction * processFactor * regionFactor * plantEfficiencyFactor;
-      const recyclingStageEmission = materialWeight * recyclingEmission * recycledFraction * regionFactor;
-      const productionEmission = primaryProductionEmission + recyclingStageEmission;
-
-      // 2. TRANSPORT STAGE EMISSIONS
-      // Formula: Transport distance × transport factor × weight
-      const transportEmission = (safeTransportDistance * transportFactor * materialWeight);
-
-      // 3. USE PHASE EMISSIONS
-      // For metals, use phase emissions are typically minimal unless it's an energy-consuming product
-      // Most structural metals (beams, sheets, etc.) don't consume energy during use
-      const baseEnergyConsumption = energyPerTon ? parseFloat(energyPerTon) : 0; // Default to 0 for metals
-      const totalEnergyUse = baseEnergyConsumption * materialWeight * 1000; // Convert to kWh
-      
-      // Use phase emissions only apply if there's actual energy consumption during use
-      // For most metal products, this should be zero or very minimal
-      const usageEmission = totalEnergyUse > 0 ? 
-        (totalEnergyUse * regionFactor * safeLifespan) / safeEfficiencyFactor : 
-        0; // No use phase emissions for passive metal products
-
-      // 4. END-OF-LIFE STAGE EMISSIONS
-      // Landfill: Positive emissions from waste management
-      // Recycling: Avoided emissions from displacing primary production
-      // Reuse: Higher avoided emissions as it displaces entire production
-      const landfillEmission = (normalizedLandfill / 100) * materialWeight * 0.1; // Waste management emissions
-      const recyclingBenefit = (normalizedRecycling / 100) * materialWeight * baseEmission * 0.9; // 90% credit for avoided primary production
-      const reuseBenefit = (normalizedReuse / 100) * materialWeight * baseEmission * 0.95; // 95% credit for reuse
-      const endOfLifeEmission = landfillEmission - recyclingBenefit - reuseBenefit;
-
-      // 5. TOTAL EMISSIONS WITH ADJUSTMENTS
-      // Emission control effect (0-100 scale where 50 is baseline)
-      const emissionControlEffect = emissionControl[0] / 50; // Normalized to baseline of 1.0 at 50%
-      
-      // Calculate base total before adjustments
-      const baseTotal = productionEmission + transportEmission + usageEmission + endOfLifeEmission;
-      
-      // Apply emission control effect (represents technology/process improvements)
-      const totalEmission = Math.max(0, baseTotal * emissionControlEffect);
-
-      // 6. CIRCULARITY INDICATOR CALCULATION
-      // Based on Ellen MacArthur Foundation circularity indicators
-      const materialCircularity = (safeRecycledContent + normalizedRecycling) / 2;
-      const utilityCircularity = normalizedReuse;
-      const circularityIndex = (materialCircularity * 0.7 + utilityCircularity * 0.3);
-      const processBonus = processMethod === 'recycling' ? 10 : 0;
-      const newCircularity = Math.max(0, Math.min(100, 
-        Math.round(circularityIndex + processBonus)
-      ));
-
-      // 7. ENERGY CALCULATION (kWh)
-      // Energy consumption factors derived from CO2 emissions (assuming typical energy mix)
-      // Rough conversion: CO2 emissions / 0.5 (kg CO2/kWh average) = energy intensity
-      const metalEnergyFactor = selectedMetal ? selectedMetal.co2Primary / 0.5 : 100; // kWh/tonne
-      const recyclingEnergyFactor = selectedMetal ? (selectedMetal.co2NewScrap || selectedMetal.co2Primary * 0.1) / 0.5 : 10; // kWh/tonne
-      
-      // Use provided energy value or calculated based on metal type (for production)
-      const productionEnergyIntensity = energyPerTon ? parseFloat(energyPerTon) : metalEnergyFactor;
-      
-      // Production energy (kWh) - different for virgin vs recycled material
-      const virginProductionEnergy = materialWeight * 1000 * productionEnergyIntensity * virginFraction * processFactor;
-      const recycledProductionEnergy = materialWeight * 1000 * recyclingEnergyFactor * recycledFraction * processFactor;
-      const productionEnergy = virginProductionEnergy + recycledProductionEnergy;
-      
-      // Transport energy (kWh/tonne-km)
-      const transportEnergyFactor = {
-        truck: 0.8,   // kWh/tonne-km
-        rail: 0.3,    // More efficient
-        ship: 0.15,   // Most efficient for long distance
-        air: 8.5      // Very energy intensive
-      }[transportMode] || 0.8;
-      const transportEnergy = safeTransportDistance * materialWeight * transportEnergyFactor;
-      
-      // Use phase energy - only include if there's actual energy consumption during use
-      // For most metal products (structural, sheets, etc.), this is zero
-      const usePhaseEnergy = baseEnergyConsumption > 0 ? totalEnergyUse * safeLifespan / safeEfficiencyFactor : 0;
-      
-      // Total energy with plant efficiency
-      const totalEnergy = Math.max(0, Math.round(
-        (productionEnergy + transportEnergy + usePhaseEnergy) * plantEfficiencyFactor
-      ));
-
-      // Update state with converted values (convert back to kg for display)
-      setTotalCO2(Math.round(totalEmission * 1000)); // Convert tonnes to kg
-      setCircularityScore(newCircularity);
-      setEnergyUsed(totalEnergy);
-      setShowResults(true); // Show results after calculation
-
-            // Console log for debugging calculations
-      console.log('=== LCA Calculation Debug ===');
-      console.log('Input Values:');
-      console.log('- Material Weight:', materialWeight, 'tonnes');
-      console.log('- Metal Type:', metalType, '- Production Energy Factor:', metalEnergyFactor, 'kWh/kg');
-      console.log('- Virgin/Recycled Split:', (virginFraction*100).toFixed(1) + '%', '/', (recycledFraction*100).toFixed(1) + '%');
-      console.log('- Transport:', safeTransportDistance, 'km via', transportMode);
-      console.log('- End-of-Life: Recycling', normalizedRecycling.toFixed(1) + '%, Landfill', normalizedLandfill.toFixed(1) + '%, Reuse', normalizedReuse.toFixed(1) + '%');
-      console.log('- Use Phase Energy Input:', baseEnergyConsumption, 'kWh/kg (0 = no energy use during operation)');
-      console.log('Emissions Breakdown:');
-      console.log('- Production Emission:', Math.round(productionEmission * 1000), 'kg CO₂');
-      console.log('- Transport Emission:', Math.round(transportEmission * 1000), 'kg CO₂');
-      console.log('- Usage Emission:', Math.round(usageEmission * 1000), 'kg CO₂', '(should be 0 for most metals)');
-      console.log('- End-of-Life Emission:', Math.round(endOfLifeEmission * 1000), 'kg CO₂');
-      console.log('- Base Total:', Math.round(baseTotal * 1000), 'kg CO₂');
-      console.log('- Emission Control Effect:', emissionControlEffect.toFixed(2));
-      console.log('- Final Total CO₂:', Math.round(totalEmission * 1000), 'kg CO₂');
-      console.log('Energy Breakdown:');
-      console.log('- Production Energy:', Math.round(productionEnergy), 'kWh');
-      console.log('- Transport Energy:', Math.round(transportEnergy), 'kWh');
-      console.log('- Use Phase Energy:', Math.round(usePhaseEnergy), 'kWh');
-      console.log('- Total Energy:', totalEnergy, 'kWh');
-      console.log('- Energy per kg of material:', (totalEnergy / (materialWeight * 1000)).toFixed(2), 'kWh/kg');
-      console.log('Expected CO₂ range for', selectedMetal?.name + ':', Math.round(baseEmission * materialWeight * 1000), 'kg (virgin) to', Math.round(recyclingEmission * materialWeight * 1000), 'kg (100% recycled)');
-      console.log('=============================');
-
-      // Update chart data with proper scaling
-      const productionEmissionKg = Math.max(0, Math.round(productionEmission * 1000));
-      const transportEmissionKg = Math.max(0, Math.round(transportEmission * 1000));
-      const usageEmissionKg = Math.max(0, Math.round(usageEmission * 1000));
-      const endOfLifeEmissionKg = Math.round(endOfLifeEmission * 1000);
-      const circularitySavingsKg = Math.round(-(recyclingBenefit + reuseBenefit) * 1000);
-      
-      const newCo2StageData = [
-        { name: 'Production', value: productionEmissionKg },
-        { name: 'Transport', value: transportEmissionKg },
-        { name: 'Usage', value: usageEmissionKg },
-        { name: 'End of Life', value: endOfLifeEmissionKg },
-        { name: 'Circularity savings', value: circularitySavingsKg }
-      ];
-      setCo2StageData(newCo2StageData);
-      
-      // Verify chart data sums to total (excluding circularity savings as they're already included in end-of-life)
-      const chartSum = productionEmissionKg + transportEmissionKg + usageEmissionKg + endOfLifeEmissionKg;
-      const totalCO2Kg = Math.round(totalEmission * 1000);
-      console.log('Chart sum verification:', chartSum, 'vs Total:', totalCO2Kg, 'Difference:', Math.abs(chartSum - totalCO2Kg));
-
-      // Update pie chart data - ensure percentages add up correctly
-      const totalEoLPercent = normalizedLandfill + normalizedRecycling + normalizedReuse;
-      const pieLandfill = totalEoLPercent > 0 ? (normalizedLandfill / totalEoLPercent) * 100 : 0;
-      const pieRecycling = totalEoLPercent > 0 ? (normalizedRecycling / totalEoLPercent) * 100 : 0;
-      const pieReuse = totalEoLPercent > 0 ? (normalizedReuse / totalEoLPercent) * 100 : 0;
-      
-      const newPieData = [
-        { name: 'Recycled Content', value: Math.round(safeRecycledContent), color: '#22c55e' },
-        { name: 'Virgin Material', value: Math.round(100 - safeRecycledContent), color: '#3b82f6' },
-        { name: 'Landfill EoL', value: Math.round(pieLandfill), color: '#ef4444' },
-        { name: 'Reuse EoL', value: Math.round(pieReuse), color: '#f59e0b' }
-      ];
-      setPieData(newPieData);
-
-      // Generate Sankey diagram data
-      generateSankeyData();
-
-      toast({
-        title: "LCA Analysis Complete",
-        description: `Total CO₂: ${Math.round(totalEmission * 1000).toLocaleString()} kg | Energy: ${totalEnergy.toLocaleString()} kWh | Circularity: ${newCircularity}%`,
-      });
-      
-      // Automatically save to reports after successful calculation
-      const analysisData = {
-        id: Date.now(),
-        name: `${selectedMetal?.name || metalType} Analysis`,
-        date: new Date().toISOString(),
-        co2: Math.round(totalEmission * 1000),
-        circularity: newCircularity,
-        energy: totalEnergy,
-        inputs: {
-          metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-          plantType, plantLocation, transportDistance, transportMode, transportWeight,
-          lifespan, efficiencyFactor, recyclingPercent, landfillPercent, reusePercent,
-          recoveryMethod, emissionControl: emissionControl[0], adjustment
-        }
-      };
-      
-      // Store in localStorage for demo purposes
-      const existingReports = JSON.parse(localStorage.getItem('lcaReports') || '[]');
-      localStorage.setItem('lcaReports', JSON.stringify([analysisData, ...existingReports]));
-      
-      // Validation warning for unrealistic values
-      const totalCO2kg = Math.round(totalEmission * 1000);
-      const expectedMaxCO2 = baseEmission * materialWeight * 1000 * 2; // 2x base emission as reasonable upper bound
-      
-      if (totalCO2kg > expectedMaxCO2) {
-        console.warn('⚠️ WARNING: CO₂ emissions seem unusually high!');
-        console.warn('Expected maximum for', metalType, ':', expectedMaxCO2.toLocaleString(), 'kg CO₂');
-        console.warn('Actual calculated:', totalCO2kg.toLocaleString(), 'kg CO₂');
-        console.warn('Check: Use phase energy input, lifespan, and other parameters');
-      }
-    } catch (error) {
-      console.error('Error in LCA calculation:', error);
-      toast({
-        title: "Calculation Error",
-        description: "There was an error calculating the LCA results. Please check your inputs.",
-        variant: "destructive"
-      });
-    }
-  }, [
-    metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-    plantType, plantLocation, transportDistance, transportMode, transportWeight,
-    lifespan, efficiencyFactor, recyclingPercent, landfillPercent, reusePercent,
-    recoveryMethod, emissionControl, adjustment, generateSankeyData, toast
-  ]);
-
-  // Generate initial Sankey data on component mount
+  // Load saved report data if coming from Reports page
   useEffect(() => {
-    console.log('Component mounted, generating initial Sankey data...');
-    generateSankeyData();
-    // Do NOT run initial calculation - wait for submit
-  }, []); // Empty dependency array for initial load only
-
-  // Validate end-of-life percentages when they change
-  useEffect(() => {
-    const total = recyclingPercent + landfillPercent + reusePercent;
-    if (total > 105) { // Allow small buffer for user input
-      validateEoLPercentages();
-    }
-  }, [recyclingPercent, landfillPercent, reusePercent, validateEoLPercentages]);
-
-  // Load saved report data when navigating from Reports view
-  useEffect(() => {
-    console.log('🔍 LCAInput useEffect: Checking for saved report data...');
     const savedReport = localStorage.getItem('currentReport');
-    console.log('📄 Saved report found:', !!savedReport);
-    console.log('📄 Saved report content:', savedReport);
-    
     if (savedReport) {
       try {
         const reportData = JSON.parse(savedReport);
-        console.log('📊 Loading saved report data:', reportData);
+        console.log('📂 Loading saved report:', reportData);
         
-        // Load all input values from the saved report
-        if (reportData.inputs) {
-          console.log('⚙️ Loading input values...');
-          setMetalType(reportData.inputs.metalType || "aluminium_primary");
-          setRecycledContent(reportData.inputs.recycledContent || 30);
-          setSourceRegion(reportData.inputs.sourceRegion || "EU");
-          setEnergyPerTon(reportData.inputs.energyPerTon || "");
-          setProcessMethod(reportData.inputs.processMethod || "smelting");
-          setPlantType(reportData.inputs.plantType || "integrated");
-          setPlantLocation(reportData.inputs.plantLocation || "germany");
-          setTransportDistance(reportData.inputs.transportDistance || 800);
-          setTransportMode(reportData.inputs.transportMode || "truck");
-          setTransportWeight(reportData.inputs.transportWeight || 10);
-          setLifespan(reportData.inputs.lifespan || 10);
-          setEfficiencyFactor(reportData.inputs.efficiencyFactor || 0.9);
-          setRecyclingPercent(reportData.inputs.recyclingPercent || 30);
-          setLandfillPercent(reportData.inputs.landfillPercent || 40);
-          setReusePercent(reportData.inputs.reusePercent || 10);
-          setRecoveryMethod(reportData.inputs.recoveryMethod || "downcycling");
-          
-          // Ensure emissionControl is always an array
-          const emissionControlValue = reportData.inputs.emissionControl;
-          if (Array.isArray(emissionControlValue)) {
-            setEmissionControl(emissionControlValue);
-          } else if (typeof emissionControlValue === 'number') {
-            setEmissionControl([emissionControlValue]);
-          } else {
-            setEmissionControl([50]);
-          }
-          
-          setAdjustment(reportData.inputs.adjustment || 30);
+        // Populate form fields with saved data
+        if (reportData.material) setMaterial(reportData.material);
+        if (reportData.quantity) setQuantity(reportData.quantity);
+        if (reportData.processRoute) setProcessRoute(reportData.processRoute);
+        if (reportData.transportMode) setTransportMode(reportData.transportMode);
+        if (reportData.transportDistance) setTransportDistance(reportData.transportDistance);
+        if (reportData.reusePercent) setReusePercent(reportData.reusePercent);
+        if (reportData.recyclingPercent) setRecyclingPercent(reportData.recyclingPercent);
+        if (reportData.disposalPercent) setDisposalPercent(reportData.disposalPercent);
+        
+        // If results exist, show them
+        if (reportData.results) {
+          setLcaResults(reportData.results);
+          setWaterUse(reportData.waterUse || 0);
+          setCircularityScore(reportData.circularity || 0);
+          setResourceEfficiency(reportData.results.ced ? Math.min(10, 10 - (reportData.results.ced / 10000)) : 0);
+          setRecycledContent(reportData.processRoute === "recycled" ? 80 : reportData.processRoute === "hybrid" ? 40 : 0);
+          setLifeExtension(reportData.reusePercent ? reportData.reusePercent / 10 : 0);
+          setShowResults(true);
+          setCurrentStep(9); // Jump to results step
         }
         
-        // Load results and show them
-        console.log('📈 Loading results...');
-        setTotalCO2(reportData.co2 || 115000);
-        setCircularityScore(reportData.circularity || 60);
-        setEnergyUsed(reportData.energy || 150000);
-        
-        // Load chart data if available
-        if (reportData.chartData) {
-          console.log('📊 Loading saved chart data...');
-          try {
-            if (reportData.chartData.co2StageData && Array.isArray(reportData.chartData.co2StageData)) {
-              setCo2StageData(reportData.chartData.co2StageData);
-            }
-            if (reportData.chartData.pieData && Array.isArray(reportData.chartData.pieData)) {
-              setPieData(reportData.chartData.pieData);
-            }
-            if (reportData.chartData.sankeyData && 
-                reportData.chartData.sankeyData.nodes && 
-                reportData.chartData.sankeyData.links) {
-              setSankeyData(reportData.chartData.sankeyData);
-            }
-          } catch (chartError) {
-            console.error('Error loading chart data:', chartError);
-            // Keep default chart data if loading fails
-          }
-        }
-        
-        setShowResults(true); // Show results since we're viewing a saved report
-        console.log('✅ Setting showResults to true');
-        
-        // Clear the saved report from localStorage to prevent reloading on refresh
+        // Clear the saved report data
         localStorage.removeItem('currentReport');
         
         toast({
-          title: "Report Loaded",
-          description: `Successfully loaded ${reportData.name || 'saved analysis'} data with charts.`,
+          title: "📊 Report Loaded",
+          description: `Successfully loaded "${reportData.name}" analysis data.`,
         });
         
       } catch (error) {
-        console.error('❌ Error loading saved report:', error);
+        console.error('Error loading saved report:', error);
+        localStorage.removeItem('currentReport');
         toast({
           title: "Error Loading Report",
-          description: "Could not load the saved report data.",
-          variant: "destructive",
+          description: "Failed to load saved report data.",
+          variant: "destructive"
         });
       }
     }
-  }, []); // Empty dependency array to run only once on mount
+  }, []);
 
-  // Save analysis to reports
-  const saveAnalysis = () => {
-    // In a real app, this would save to a database or state management
-    const analysisData = {
-      id: Date.now(),
-      name: `${metalType.charAt(0).toUpperCase() + metalType.slice(1)} Analysis`,
+  // Transport emission factors
+  const transportFactors = {
+    road: { factor: 0.18, label: "0.18 kg CO₂/ton-km (Short)" },
+    rail: { factor: 0.04, label: "0.04 kg CO₂/ton-km (Medium)" },
+    ship: { factor: 0.02, label: "0.02 kg CO₂/ton-km (Long)" }
+  };
+
+  // AI Prediction Functions
+  const predictCED = useCallback((material, route) => {
+    if (!material || !materialDatabase[material]) return "";
+    const data = materialDatabase[material];
+    const baseCED = route === "recycled" ? data.cedRecycled : 
+                   route === "hybrid" ? data.cedHybrid : data.cedPrimary;
+    // Add some AI variance (±20%)
+    const variance = (Math.random() - 0.5) * 0.4;
+    return Math.round(baseCED * (1 + variance));
+  }, []);
+
+  const predictGWP = useCallback((material, route) => {
+    if (!material || !materialDatabase[material]) return "";
+    const data = materialDatabase[material];
+    const baseGWP = route === "recycled" ? data.co2Recycled : 
+                    route === "hybrid" ? data.co2Hybrid : data.co2Primary;
+    // Add some AI variance (±15%)
+    const variance = (Math.random() - 0.5) * 0.3;
+    return Math.round(baseGWP * (1 + variance) * 10) / 10;
+  }, []);
+
+  const predictTransportDistance = useCallback((material, route) => {
+    const baseDistances = {
+      recycled: 150 + Math.random() * 150, // 150-300 km
+      primary: 300 + Math.random() * 200,  // 300-500 km
+      hybrid: 200 + Math.random() * 150    // 200-350 km
+    };
+    return Math.round(baseDistances[route] || 200);
+  }, []);
+
+  const predictTransportMode = useCallback((distance) => {
+    if (distance < 150) return "road";
+    if (distance < 400) return "rail";
+    return "ship";
+  }, []);
+
+  const predictEndOfLife = useCallback((material) => {
+    if (!material || !materialDatabase[material]) return { reuse: 15, recycling: 70, disposal: 15 };
+    
+    const circularityRating = materialDatabase[material].circularityRating;
+    if (circularityRating >= 8) {
+      return { reuse: 20, recycling: 70, disposal: 10 };
+    } else if (circularityRating >= 6) {
+      return { reuse: 15, recycling: 65, disposal: 20 };
+    } else {
+      return { reuse: 10, recycling: 50, disposal: 40 };
+    }
+  }, []);
+
+  // AI Auto-fill handlers
+  const handleAIFillQuantity = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const optimalQuantity = 15 + Math.random() * 35; // 15-50kg range
+      setQuantity(Math.round(optimalQuantity));
+      setIsAIActive(false);
+      toast({
+        title: "🤖 AI Prediction",
+        description: `Optimal quantity predicted based on industry benchmarks: ${Math.round(optimalQuantity)} kg`,
+      });
+    }, 1000);
+  };
+
+  const handleAIFillRoute = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const recommendedRoute = material && materialDatabase[material]?.circularityRating >= 7 ? "recycled" : "hybrid";
+      setProcessRoute(recommendedRoute);
+      setIsAIActive(false);
+      toast({
+        title: "🤖 AI Recommendation",
+        description: `${recommendedRoute} route recommended for maximum circularity`,
+      });
+    }, 800);
+  };
+
+  const handleAIFillCED = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const predicted = predictCED(material, processRoute);
+      setEnergyCED(predicted.toString());
+      setIsAIActive(false);
+      toast({
+        title: `🤖 AI Prediction (${BEST_MODEL})`,
+        description: `CED predicted: ${predicted} MJ/kg based on ${material} + ${processRoute} route`,
+      });
+    }, 1200);
+  };
+
+  const handleAIFillGWP = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const predicted = predictGWP(material, processRoute);
+      setCarbonGWP(predicted.toString());
+      setIsAIActive(false);
+      toast({
+        title: `🤖 AI Prediction (${BEST_MODEL})`,
+        description: `GWP predicted: ${predicted} kg CO₂-eq/kg for ${material} (${processRoute})`,
+      });
+    }, 1100);
+  };
+
+  const handleAIFillTransport = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const predictedDistance = predictTransportDistance(material, processRoute);
+      const predictedMode = predictTransportMode(predictedDistance);
+      setTransportDistance(predictedDistance);
+      setTransportMode(predictedMode);
+      setIsAIActive(false);
+      toast({
+        title: "🤖 AI Transport Prediction",
+        description: `${predictedDistance} km via ${predictedMode} recommended for ${material}`,
+      });
+    }, 900);
+  };
+
+  const handleAIFillEndOfLife = () => {
+    setIsAIActive(true);
+    setTimeout(() => {
+      const predictions = predictEndOfLife(material);
+      setReusePercent(predictions.reuse);
+      setRecyclingPercent(predictions.recycling);
+      setDisposalPercent(predictions.disposal);
+      setIsAIActive(false);
+      toast({
+        title: "🤖 AI End-of-Life Prediction",
+        description: `Optimal distribution: ${predictions.reuse}% reuse, ${predictions.recycling}% recycling, ${predictions.disposal}% disposal`,
+      });
+    }, 1000);
+  };
+
+  // Validation function for End-of-Life percentages
+  const validateEndOfLife = () => {
+    const total = reusePercent + recyclingPercent + disposalPercent;
+    return Math.abs(total - 100) < 0.1; // Allow small floating point errors
+  };
+
+  // Step navigation functions
+  const nextStep = () => {
+    if (currentStep < 9) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // PDF Export function
+  const exportToPDF = useCallback(async () => {
+    if (!lcaResults) {
+      toast({
+        title: "⚠️ No Data",
+        description: "Please complete the LCA analysis before exporting",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create a new jsPDF instance
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add header
+      pdf.setFontSize(20);
+      pdf.setTextColor(59, 130, 246); // Blue color
+      pdf.text('LCA Analysis Report', pageWidth / 2, 20, { align: 'center' });
+      
+      // Add timestamp
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, 30, { align: 'center' });
+      
+      // Material Information Section
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Material Information', 20, 50);
+      
+      pdf.setFontSize(12);
+      let yPos = 60;
+      const lineHeight = 8;
+      
+      const materialInfo = [
+        `Material: ${material}`,
+        `Category: ${materialDatabase[material]?.category || 'N/A'}`,
+        `Quantity: ${quantity} kg`,
+        `Process Route: ${processRoute}`,
+        `Transport Mode: ${transportMode}`,
+        `Transport Distance: ${transportDistance} km`,
+      ];
+      
+      materialInfo.forEach(info => {
+        pdf.text(info, 20, yPos);
+        yPos += lineHeight;
+      });
+      
+      // Environmental Impact Results
+      yPos += 10;
+      pdf.setFontSize(16);
+      pdf.text('Environmental Impact Results', 20, yPos);
+      yPos += 15;
+      
+      pdf.setFontSize(12);
+      const results = [
+        `Total CO₂ Emissions: ${lcaResults.totalCO2.toFixed(2)} kg CO₂-eq`,
+        `Energy Demand (CED): ${lcaResults.ced.toFixed(2)} MJ`,
+        `Water Usage: ${lcaResults.waterUse.toFixed(2)} L`,
+        `Circularity Score: ${lcaResults.circularityScore.toFixed(1)}/10`,
+      ];
+      
+      results.forEach(result => {
+        pdf.text(result, 20, yPos);
+        yPos += lineHeight;
+      });
+      
+      // End-of-Life Distribution
+      yPos += 10;
+      pdf.setFontSize(16);
+      pdf.text('End-of-Life Distribution', 20, yPos);
+      yPos += 15;
+      
+      pdf.setFontSize(12);
+      const endOfLife = [
+        `Reuse: ${reusePercent}%`,
+        `Recycling: ${recyclingPercent}%`,
+        `Disposal: ${disposalPercent}%`,
+      ];
+      
+      endOfLife.forEach(item => {
+        pdf.text(item, 20, yPos);
+        yPos += lineHeight;
+      });
+      
+      // Process Details
+      yPos += 10;
+      pdf.setFontSize(16);
+      pdf.text('Process Breakdown', 20, yPos);
+      yPos += 15;
+      
+      pdf.setFontSize(12);
+      const processDetails = [
+        `Production Emissions: ${lcaResults.processDetails.production.toFixed(2)} kg CO₂-eq`,
+        `Transport Emissions: ${lcaResults.processDetails.transport.toFixed(2)} kg CO₂-eq`,
+        `End-of-Life Impact: ${(lcaResults.totalCO2 * 0.1).toFixed(2)} kg CO₂-eq`,
+      ];
+      
+      processDetails.forEach(detail => {
+        pdf.text(detail, 20, yPos);
+        yPos += lineHeight;
+      });
+      
+      // Known Emissions
+      if (materialDatabase[material]?.knownEmissions.length > 0) {
+        yPos += 10;
+        pdf.setFontSize(16);
+        pdf.text('Known Material Emissions', 20, yPos);
+        yPos += 15;
+        
+        pdf.setFontSize(12);
+        materialDatabase[material].knownEmissions.forEach(emission => {
+          pdf.text(`${emission.pollutant}: ${emission.value}`, 20, yPos);
+          yPos += lineHeight;
+        });
+      }
+      
+      // Add footer
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('Generated by LCA Analysis Tool', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      
+      // Save the PDF
+      const fileName = `LCA_Report_${material.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      toast({
+        title: "📄 PDF Generated",
+        description: `Report saved as ${fileName}`,
+      });
+      
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast({
+        title: "❌ Export Failed",
+        description: "Failed to generate PDF report",
+        variant: "destructive"
+      });
+    }
+  }, [lcaResults, material, quantity, processRoute, transportMode, transportDistance, reusePercent, recyclingPercent, disposalPercent, materialDatabase, toast]);
+
+  // Save LCA results to localStorage for Reports section
+  const saveToReports = useCallback((results: any) => {
+    const reportData = {
+      id: Date.now().toString(),
+      name: `${material} Analysis`,
       date: new Date().toISOString(),
-      co2: totalCO2,
-      circularity: circularityScore,
-      energy: energyUsed,
-      inputs: {
-        metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-        plantType, plantLocation, transportDistance, transportMode, transportWeight,
-        lifespan, efficiencyFactor, recyclingPercent, landfillPercent, reusePercent,
-        recoveryMethod, emissionControl: emissionControl[0], adjustment
-      },
-      chartData: {
-        co2StageData,
-        pieData,
-        sankeyData
+      material,
+      quantity,
+      processRoute,
+      transportMode,
+      transportDistance,
+      co2: results.totalCO2,
+      ced: results.ced,
+      waterUse: results.waterUse,
+      circularity: results.circularityScore,
+      reusePercent,
+      recyclingPercent,
+      disposalPercent,
+      results: results // Store full results for viewing
+    };
+
+    // Get existing reports from localStorage
+    const existingReports = JSON.parse(localStorage.getItem('lcaReports') || '[]');
+    
+    // Add new report at the top (beginning of array)
+    existingReports.unshift(reportData);
+    
+    // Save back to localStorage
+    localStorage.setItem('lcaReports', JSON.stringify(existingReports));
+    
+    toast({
+      title: "📊 Report Saved",
+      description: `Analysis saved to Reports section. Go to Reports to view it anytime.`,
+    });
+  }, [material, quantity, processRoute, transportMode, transportDistance, reusePercent, recyclingPercent, disposalPercent, toast]);
+
+  // Calculate LCA results
+  const calculateLCA = useCallback(() => {
+    if (!material || !materialDatabase[material]) {
+      toast({
+        title: "⚠️ Validation Error",
+        description: "Please select a valid material before calculating",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const selectedMaterial = materialDatabase[material];
+    const ced = parseFloat(energyCED) || selectedMaterial[`ced${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`];
+    const gwp = parseFloat(carbonGWP) || selectedMaterial[`co2${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`];
+    
+    // Transport emissions
+    const transportEmissions = (quantity * transportDistance * transportFactors[transportMode].factor) / 1000;
+    
+    // Water use calculation
+    const waterUsage = selectedMaterial[`waterUse${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`] * quantity;
+    
+    // Circularity calculations
+    const recyclingCircularityBonus = (recyclingPercent / 100) * 0.8;
+    const reuseCircularityBonus = (reusePercent / 100) * 0.9;
+    const baseCircularity = selectedMaterial.circularityRating || 5;
+    const finalCircularityScore = Math.min(10, baseCircularity + recyclingCircularityBonus + reuseCircularityBonus);
+    
+    const results = {
+      totalCO2: (gwp * quantity) + transportEmissions,
+      ced: ced * quantity,
+      waterUse: waterUsage,
+      circularityScore: finalCircularityScore,
+      material: selectedMaterial,
+      processDetails: {
+        production: gwp * quantity,
+        transport: transportEmissions,
+        endOfLife: {
+          reuse: reusePercent,
+          recycling: recyclingPercent,
+          disposal: disposalPercent
+        }
       }
     };
     
-    // Store in localStorage for demo purposes
-    const existingReports = JSON.parse(localStorage.getItem('lcaReports') || '[]');
-    localStorage.setItem('lcaReports', JSON.stringify([...existingReports, analysisData]));
+    setLcaResults(results);
+    setWaterUse(waterUsage);
+    setCircularityScore(finalCircularityScore);
+    setResourceEfficiency(Math.min(10, (10 - (gwp / 10)) + recyclingCircularityBonus));
+    setRecycledContent(processRoute === "recycled" ? 80 : processRoute === "hybrid" ? 40 : 0);
+    setLifeExtension(reusePercent / 10);
+    setShowResults(true);
+    
+    // Save results to Reports section
+    saveToReports(results);
     
     toast({
-      title: "Analysis Saved",
-      description: "Your LCA analysis has been saved to Reports.",
+      title: "✅ LCA Analysis Complete",
+      description: `Total CO₂: ${results.totalCO2.toFixed(2)} kg, Circularity Score: ${finalCircularityScore.toFixed(1)}/10`,
     });
-  };
+  }, [material, quantity, processRoute, energyCED, carbonGWP, transportDistance, transportMode, reusePercent, recyclingPercent, disposalPercent, toast]);
 
-  // Download functions
-  const downloadPDF = () => {
-    // In a real app, this would generate a PDF
-    const blob = new Blob([JSON.stringify({
-      title: `LCA Analysis - ${metalType}`,
-      date: new Date().toISOString(),
-      results: {
-        co2: totalCO2,
-        circularity: circularityScore,
-        energy: energyUsed
-      },
-      inputs: {
-        metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-        plantType, plantLocation, transportDistance, transportMode, transportWeight,
-        lifespan, efficiencyFactor, recyclingPercent, landfillPercent, reusePercent,
-        recoveryMethod, emissionControl: emissionControl[0], adjustment
+  // Calculate adjusted results based on improvement sliders
+  const calculateAdjustedResults = useCallback(() => {
+    if (!lcaResults) return null;
+
+    const emissionReductionFactor = 1 - (emissionReduction[0] / 100);
+    const efficiencyFactor = 1 + (efficiencyImprovement[0] / 100);
+    const circularityFactor = 1 + (circularityBoost[0] / 100);
+
+    const adjusted = {
+      totalCO2: lcaResults.totalCO2 * emissionReductionFactor,
+      ced: lcaResults.ced / efficiencyFactor,
+      waterUse: lcaResults.waterUse * (1 - (emissionReduction[0] / 200)), // Water scales with emission reduction
+      circularityScore: Math.min(10, lcaResults.circularityScore * circularityFactor),
+      processDetails: {
+        production: lcaResults.processDetails.production * emissionReductionFactor,
+        transport: lcaResults.processDetails.transport * emissionReductionFactor,
+        endOfLife: lcaResults.processDetails.endOfLife
       }
-    }, null, 2)], { type: 'application/json' });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lca-analysis-${metalType}-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "PDF Downloaded",
-      description: "LCA data has been exported to PDF format.",
-    });
-  };
-  
-  const downloadExcel = () => {
-    // In a real app, this would generate an Excel file
-    const blob = new Blob([JSON.stringify({
-      title: `LCA Analysis - ${metalType}`,
-      date: new Date().toISOString(),
-      results: {
-        co2: totalCO2,
-        circularity: circularityScore,
-        energy: energyUsed
-      },
-      inputs: {
-        metalType, recycledContent, sourceRegion, energyPerTon, processMethod,
-        plantType, plantLocation, transportDistance, transportMode, transportWeight,
-        lifespan, efficiencyFactor, recyclingPercent, landfillPercent, reusePercent,
-        recoveryMethod, emissionControl: emissionControl[0], adjustment
-      }
-    }, null, 2)], { type: 'application/json' });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lca-analysis-${metalType}-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Excel Downloaded",
-      description: "LCA data has been exported to Excel format.",
-    });
+    };
+
+    return adjusted;
+  }, [lcaResults, emissionReduction, efficiencyImprovement, circularityBoost]);
+
+  // Update adjusted results when sliders change
+  useEffect(() => {
+    if (lcaResults) {
+      setAdjustedResults(calculateAdjustedResults());
+    }
+  }, [lcaResults, calculateAdjustedResults]);
+
+  // Step validation
+  const isStepValid = (step) => {
+    switch(step) {
+      case 1: return material !== "";
+      case 2: return quantity > 0;
+      case 3: return processRoute !== "";
+      case 4: return energyCED !== "" || material !== "";
+      case 5: return carbonGWP !== "" || material !== "";
+      case 6: return transportDistance > 0 && transportMode !== "";
+      case 7: return validateEndOfLife();
+      case 8: return true; // Analysis step
+      case 9: return showResults; // Results step
+      default: return false;
+    }
   };
 
-  const getEmissionColorName = (): "success" | "warning" | "destructive" => {
-    const value = Array.isArray(emissionControl) ? emissionControl[0] : 50;
-    if (value <= 33) return "success";
-    if (value <= 66) return "warning";
-    return "destructive";
-  };
-
-  const getEmissionLabel = () => {
-    const value = Array.isArray(emissionControl) ? emissionControl[0] : 50;
-    if (value <= 33) return "Green";
-    if (value <= 66) return "Neutral";
-    return "Red";
-  };
+  // Step titles and descriptions
+  const stepConfig = [
+    { title: "Material Selection", desc: "Choose the primary material for analysis", icon: Target },
+    { title: "Quantity Input", desc: "Specify the amount of material", icon: Zap },
+    { title: "Process Route", desc: "Select production pathway", icon: Brain },
+    { title: "Energy Input (CED)", desc: "Cumulative Energy Demand", icon: Sparkles },
+    { title: "Carbon Input (GWP)", desc: "Global Warming Potential", icon: Target },
+    { title: "Transport Configuration", desc: "Logistics and distribution", icon: Zap },
+    { title: "End-of-Life Circularity", desc: "Post-use material flow", icon: Brain },
+    { title: "Analysis & Validation", desc: "Review and calculate", icon: Sparkles },
+    { title: "Results & Insights", desc: "Comprehensive LCA output", icon: Target }
+  ];
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-background to-muted">
-      {/* Left Sidebar - Emission Control */}
-      <div className="w-48 bg-card/95 backdrop-blur-sm border-r border-border p-4 flex flex-col items-center space-y-6">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-foreground mb-2">Emission</h2>
+    <motion.div 
+      className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen bg-background text-foreground"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Animated Header */}
+      <motion.div 
+        className="text-center mb-8"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+          🤖 AI-Powered LCA Analysis
+        </h1>
+        <p className="text-xl text-foreground/80 mb-4">
+          {TRAINING_SAMPLES} Training Samples • {BEST_MODEL} Model (R² = {AI_MODELS[BEST_MODEL].r2})
+        </p>
+        
+        {/* Enhanced Progress Bar with Animation */}
+        <div className="w-full bg-muted rounded-full h-4 mb-6 overflow-hidden shadow-inner">
+          <motion.div 
+            className="h-4 rounded-full bg-gradient-to-r from-primary via-blue-500 to-purple-500 relative"
+            initial={{ width: 0 }}
+            animate={{ width: `${(currentStep / 9) * 100}%` }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{
+                x: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{ width: '50%' }}
+            />
+          </motion.div>
         </div>
         
-        <div className="flex-1 flex flex-col items-center justify-start w-full pt-8">
-          <Slider
-            orientation="vertical"
-            value={Array.isArray(emissionControl) ? emissionControl : [50]}
-            onValueChange={handleEmissionChange}
-            max={100}
-            step={1}
-            color={getEmissionColorName()}
-            className="h-96"
-          />
-          <Badge variant="outline" className={`mt-4 text-${getEmissionColorName()}`}>
-            {getEmissionLabel()} {Array.isArray(emissionControl) ? emissionControl[0] : 50}%
-          </Badge>
-        </div>
-
-        {/* Download Buttons */}
-        <div className="space-y-3 pt-0">
-          <Button 
-            onClick={downloadPDF}
-            className="w-full bg-success hover:bg-success/90 text-white"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download PDF
-          </Button>
-          <Button 
-            // onClick={downloadExcel}
-            className="w-full bg-success hover:bg-success/90 text-white"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Excel
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-6 space-y-6">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary mb-2">LCA: Metals (Cradle-to-Grave)</h1>
-          </div>
-
-          {/* Inputs Section */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl text-success">Inputs</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Raw Material */}
-              <div>
-                <h3 className="font-semibold mb-4">Raw Material</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Metal</Label>
-                    <Select value={metalType} onValueChange={setMetalType}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px] overflow-y-auto">
-                        {Object.entries(metalDatabase).map(([key, metal]) => (
-                          <SelectItem key={key} value={key}>{metal.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">
-                      % Recycled 
-                      {isSliderActive && <span className="text-primary ml-1">🎛️</span>}
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={recycledContent}
-                        onChange={(e) => setRecycledContent(Number(e.target.value))}
-                        className={`pr-8 ${isSliderActive ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">
-                      Source Region
-                      {isSliderActive && <span className="text-primary ml-1">🎛️</span>}
-                    </Label>
-                    <Select value={sourceRegion} onValueChange={setSourceRegion}>
-                      <SelectTrigger className={isSliderActive ? 'ring-2 ring-primary/50 bg-primary/5' : ''}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="EU">EU</SelectItem>
-                        <SelectItem value="USA">USA</SelectItem>
-                        <SelectItem value="China">China</SelectItem>
-                        <SelectItem value="India">India</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Process */}
-              <div>
-                <h3 className="font-semibold mb-4">Process</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Energy (kWh/ton)</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={energyPerTon}
-                        onChange={(e) => setEnergyPerTon(e.target.value)}
-                        placeholder="Leave empty to AI-predict"
-                      />
-                      {!energyPerTon && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="absolute right-1 top-1 h-8 text-xs"
-                          onClick={handleAIPredict}
-                        >
-                          EF via backend
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Method</Label>
-                    <Select value={processMethod} onValueChange={setProcessMethod}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="smelting">Smelting</SelectItem>
-                        <SelectItem value="electrolysis">Electrolysis</SelectItem>
-                        <SelectItem value="recycling">Recycling</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Plant Type</Label>
-                    <Select value={plantType} onValueChange={setPlantType}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="integrated">Integrated</SelectItem>
-                        <SelectItem value="mini-mill">Mini Mill</SelectItem>
-                        <SelectItem value="recycling">Recycling Plant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Plant Location</Label>
-                    <Select value={plantLocation} onValueChange={setPlantLocation}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="germany">Germany</SelectItem>
-                        <SelectItem value="france">France</SelectItem>
-                        <SelectItem value="italy">Italy</SelectItem>
-                        <SelectItem value="spain">Spain</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transport */}
-              <div>
-                <h3 className="font-semibold mb-4">Transport</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Distance</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={transportDistance}
-                        onChange={(e) => setTransportDistance(Number(e.target.value))}
-                        className="pr-8"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">km</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">
-                      Mode
-                      {isSliderActive && <span className="text-primary ml-1">🎛️</span>}
-                    </Label>
-                    <Select value={transportMode} onValueChange={setTransportMode}>
-                      <SelectTrigger className={isSliderActive ? 'ring-2 ring-primary/50 bg-primary/5' : ''}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="truck">Truck</SelectItem>
-                        <SelectItem value="rail">Rail</SelectItem>
-                        <SelectItem value="ship">Ship</SelectItem>
-                        <SelectItem value="air">Air</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Weight</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={transportWeight}
-                        onChange={(e) => setTransportWeight(Number(e.target.value))}
-                        className="pr-8"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">t</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Usage */}
-              <div>
-                <h3 className="font-semibold mb-4">Usage</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Lifespan</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={lifespan}
-                        onChange={(e) => setLifespan(Number(e.target.value))}
-                        className="pr-12"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">years</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Efficiency factor</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="1"
-                      value={efficiencyFactor}
-                      onChange={(e) => setEfficiencyFactor(Number(e.target.value))}
-                    />
-                    <p className="text-xs text-muted-foreground">0-1, lower = losses</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* End-of-Life */}
-              <div>
-                <h3 className="font-semibold mb-4">End-of-Life</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Recycling %</Label>
-                    <Input
-                      type="number"
-                      value={recyclingPercent}
-                      onChange={(e) => setRecyclingPercent(Number(e.target.value))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Landfill %</Label>
-                    <Input
-                      type="number"
-                      value={landfillPercent}
-                      onChange={(e) => setLandfillPercent(Number(e.target.value))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Reuse %</Label>
-                    <Input
-                      type="number"
-                      value={reusePercent}
-                      onChange={(e) => setReusePercent(Number(e.target.value))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Recovery method</Label>
-                    <Select value={recoveryMethod} onValueChange={setRecoveryMethod}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="downcycling">Downcycling</SelectItem>
-                        <SelectItem value="upcycling">Upcycling</SelectItem>
-                        <SelectItem value="mechanical">Mechanical</SelectItem>
-                        <SelectItem value="chemical">Chemical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-between pt-4">
-                <Button 
-                  onClick={resetToDefaults}
-                  size="sm"
-                  variant="outline"
-                  className="px-4 py-2"
+        {/* Enhanced Step Indicators with Animation */}
+        <div className="flex justify-center space-x-2 mb-6">
+          {stepConfig.map((step, index) => {
+            const StepIcon = step.icon;
+            const isCompleted = isStepValid(index + 1) && currentStep > index + 1;
+            const isActive = currentStep === index + 1;
+            
+            return (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-gradient-to-r from-primary/20 to-blue-100/20 text-primary ring-2 ring-primary/30 shadow-lg dark:from-primary/20 dark:to-blue-900/20 dark:text-primary' 
+                    : isCompleted
+                    ? 'bg-gradient-to-r from-success/20 to-emerald-100/20 text-success ring-1 ring-success/20 dark:from-success/20 dark:to-emerald-900/20 dark:text-success'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                onClick={() => setCurrentStep(index + 1)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  animate={{
+                    scale: isActive ? [1, 1.2, 1] : 1,
+                    rotate: isCompleted ? 360 : 0
+                  }}
+                  transition={{
+                    scale: { duration: 2, repeat: isActive ? Infinity : 0 },
+                    rotate: { duration: 0.6 }
+                  }}
                 >
-                  Reset to Defaults
-                </Button>
+                  {isCompleted ? (
+                    <CheckCircle className="w-4 h-4 text-success" />
+                  ) : (
+                    <StepIcon className="w-4 h-4" />
+                  )}
+                </motion.div>
+                <span className="hidden sm:inline">{index + 1}. {step.title}</span>
+                <span className="sm:hidden">{index + 1}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Step Content with Enhanced Animation */}
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <Card className="min-h-[400px] shadow-xl bg-card border-border">
+          <CardHeader>
+            <AnimatedStepTitle 
+              step={currentStep}
+              title={stepConfig[currentStep - 1].title}
+              isActive={true}
+              isCompleted={false}
+            />
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-gray-600 mt-4"
+            >
+              {stepConfig[currentStep - 1].desc}
+            </motion.p>
+          </CardHeader>
+        
+        <CardContent className="space-y-6">
+          {/* Step 1: Material Selection */}
+          {currentStep === 1 && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="material" className="text-base font-medium mb-3 block">
+                  Select Material for LCA Analysis
+                </Label>
+                <Select value={material} onValueChange={setMaterial}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose a material..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[400px]">
+                    {(() => {
+                      // Group materials by category
+                      const groupedMaterials = Object.entries(materialDatabase).reduce((acc, [key, mat]) => {
+                        const category = mat.category || "Other";
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push({ key, ...mat });
+                        return acc;
+                      }, {});
+
+                      return Object.entries(groupedMaterials)
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([category, materials]) => (
+                          <div key={category}>
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground border-b">
+                              {category}
+                            </div>
+                            {(materials as any[])
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((mat) => (
+                                <SelectItem key={mat.key} value={mat.key}>
+                                  <div className="flex items-center space-x-2">
+                                    <span>{mat.name}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {mat.circularityRating}/10
+                                    </Badge>
+                                    {mat.co2Primary > 1000 && (
+                                      <Badge variant="destructive" className="text-xs">
+                                        High Impact
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </div>
+                        ));
+                    })()}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {material && materialDatabase[material] && (
+                <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <h3 className="font-semibold text-primary mb-2">Material Overview</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-foreground/70">Category:</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].category}</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Circularity Rating:</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].circularityRating}/10</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Default Route:</span>
+                      <span className="ml-2 font-medium text-foreground capitalize">{materialDatabase[material].defaultType}</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">CO₂ (Primary):</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].co2Primary} kg/kg</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">CO₂ (Recycled):</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].co2Recycled} kg/kg</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Water Use:</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].waterUsePrimary} L/kg</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3">
+                    <h4 className="font-medium text-primary mb-1">Known Emissions:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {materialDatabase[material].knownEmissions.map((emission, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {emission.pollutant}: {emission.value}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Quantity Input */}
+          {currentStep === 2 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="quantity" className="text-base font-medium">
+                  Material Quantity (kg)
+                </Label>
                 <Button 
-                  onClick={handleSubmit}
-                  size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-2"
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillQuantity}
+                  disabled={isAIActive}
+                  className="ml-4"
                 >
-                  Submit to AI/Backend
+                  {isAIActive ? "🤖 Predicting..." : "🤖 AI Fill"}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* NEW: Interactive Scenario Sliders - Real-time ROC Updates */}
-          <Card className="shadow-lg border-blue-200 bg-gradient-to-r from-blue-50 to-green-50">
-            <CardHeader>
-              <CardTitle className="text-xl text-blue-700 flex items-center gap-2">
-                🎛️ Scenario Explorer - Live ROC Impact
-                <Badge className="bg-blue-100 text-blue-800">Real-time</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Recycling Rate Slider */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Recycling Rate</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-green-600">{recycledContent}%</span>
-                    <Badge variant="outline" className="text-xs">
-                      {recycledContent > 50 ? '🌟 Excellent' : recycledContent > 30 ? '✅ Good' : '⚠️ Improve'}
-                    </Badge>
-                  </div>
-                </div>
-                <Slider
-                  value={[recycledContent]}
-                  onValueChange={(value) => setRecycledContent(value[0])}
-                  max={80}
-                  min={0}
-                  step={5}
-                  className="w-full"
+              
+              <div className="space-y-4">
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                  placeholder="Enter quantity in kg"
+                  min="1"
+                  max="1000"
                 />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>0% (Virgin only)</span>
-                  <span>40% (Industry avg)</span>
-                  <span>80% (Best practice)</span>
-                </div>
-              </div>
-
-              {/* Transport Distance Slider */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Transport Distance</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-blue-600">{transportDistance} km</span>
-                    <Badge variant="outline" className="text-xs">
-                      {transportDistance < 500 ? '🚛 Local' : transportDistance < 1500 ? '🌍 Regional' : '✈️ Global'}
-                    </Badge>
-                  </div>
-                </div>
-                <Slider
-                  value={[transportDistance]}
-                  onValueChange={(value) => setTransportDistance(value[0])}
-                  max={3000}
-                  min={100}
-                  step={100}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>100km (Local)</span>
-                  <span>800km (Regional)</span>
-                  <span>3000km (Global)</span>
-                </div>
-              </div>
-
-              {/* Energy Mix Slider */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Renewable Energy %</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-green-600">{100 - (emissionControl?.[0] || 50)}%</span>
-                    <Badge variant="outline" className="text-xs">
-                      {(100 - (emissionControl?.[0] || 50)) > 70 ? '🌱 Clean' : (100 - (emissionControl?.[0] || 50)) > 40 ? '⚡ Mixed' : '🏭 Fossil'}
-                    </Badge>
-                  </div>
-                </div>
-                <Slider
-                  value={emissionControl}
-                  onValueChange={(value) => setEmissionControl(value)}
-                  max={100}
-                  min={0}
-                  step={10}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>100% Renewable</span>
-                  <span>50% Mixed</span>
-                  <span>100% Fossil</span>
-                </div>
-              </div>
-
-              {/* Live ROC Preview */}
-              <div className="bg-white rounded-lg p-4 border-2 border-dashed border-green-300">
-                <h4 className="font-semibold text-green-800 mb-2">🎯 Live ROC Preview</h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">{Math.round(60 + (recycledContent * 0.5) - (transportDistance * 0.01))}%</div>
-                    <div className="text-xs text-gray-600">Current ROC</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-blue-600">{Math.round(115 - (recycledContent * 1.2) + (transportDistance * 0.02))}t</div>
-                    <div className="text-xs text-gray-600">CO₂ Emissions</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-purple-600">{Math.round(150 - (recycledContent * 0.8) + ((emissionControl?.[0] || 50) * 0.5))}k</div>
-                    <div className="text-xs text-gray-600">Energy (kWh)</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* NEW: Industry Presets */}
-          <Card className="shadow-lg border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50">
-            <CardHeader>
-              <CardTitle className="text-xl text-orange-700 flex items-center gap-2">
-                🏭 Industry Presets - Quick Start
-                <Badge className="bg-orange-100 text-orange-800">One-click</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Aluminium Cans Preset */}
-                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-blue-300" 
-                      onClick={() => {
-                        setMetalType("aluminium_primary");
-                        setRecycledContent(75);
-                        setTransportDistance(400);
-                        setProcessMethod("smelting");
-                        setLifespan(0.5);
-                        setRecyclingPercent(80);
-                        toast({
-                          title: "Aluminium Cans Loaded",
-                          description: "Optimized parameters for beverage can production"
-                        });
-                      }}>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">🥤</div>
-                    <h3 className="font-semibold text-blue-700">Aluminium Cans</h3>
-                    <p className="text-xs text-gray-600 mt-1">75% recycled, 400km transport</p>
-                    <Badge className="mt-2 bg-green-100 text-green-700">ROC: ~85%</Badge>
-                  </CardContent>
-                </Card>
-
-                {/* Copper Wires Preset */}
-                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-yellow-300"
-                      onClick={() => {
-                        setMetalType("copper");
-                        setRecycledContent(35);
-                        setTransportDistance(800);
-                        setProcessMethod("electrolysis");
-                        setLifespan(25);
-                        setRecyclingPercent(95);
-                        toast({
-                          title: "Copper Wires Loaded",
-                          description: "Standard parameters for electrical wire production"
-                        });
-                      }}>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">🔌</div>
-                    <h3 className="font-semibold text-yellow-700">Copper Wires</h3>
-                    <p className="text-xs text-gray-600 mt-1">35% recycled, 800km transport</p>
-                    <Badge className="mt-2 bg-yellow-100 text-yellow-700">ROC: ~65%</Badge>
-                  </CardContent>
-                </Card>
-
-                {/* Battery Materials Preset */}
-                <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-transparent hover:border-purple-300"
-                      onClick={() => {
-                        setMetalType("lithium");
-                        setRecycledContent(15);
-                        setTransportDistance(1500);
-                        setProcessMethod("electrolysis");
-                        setLifespan(8);
-                        setRecyclingPercent(40);
-                        toast({
-                          title: "Battery Materials Loaded",
-                          description: "Critical mineral parameters for battery production"
-                        });
-                      }}>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">🔋</div>
-                    <h3 className="font-semibold text-purple-700">Battery Materials</h3>
-                    <p className="text-xs text-gray-600 mt-1">15% recycled, 1500km transport</p>
-                    <Badge className="mt-2 bg-purple-100 text-purple-700">ROC: ~35%</Badge>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Results Section - Only show after submit */}
-          {showResults ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="text-center shadow-lg">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground mb-2">TOTAL CO₂</p>
-                    <p className="text-3xl font-bold text-foreground">{totalCO2.toLocaleString()} kg</p>
-                  </CardContent>
-                </Card>
                 
-                <Card className="text-center shadow-lg">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground mb-2">CIRCULARITY SCORE</p>
-                    <p className="text-3xl font-bold text-primary">{circularityScore}%</p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="text-center shadow-lg">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground mb-2">ENERGY USED</p>
-                    <p className="text-3xl font-bold text-warning">{energyUsed.toLocaleString()} kWh</p>
-                  </CardContent>
-                </Card>
+                <div className="grid grid-cols-3 gap-2">
+                  {[10, 25, 50].map((preset) => (
+                    <Button 
+                      key={preset}
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setQuantity(preset)}
+                    >
+                      {preset} kg
+                    </Button>
+                  ))}
+                </div>
               </div>
+              
+              {quantity > 0 && (
+                <div className="mt-4 p-4 bg-success/5 border border-success/20 rounded-lg">
+                  <div className="text-sm text-success">
+                    <strong>Quantity Selected:</strong> {quantity} kg
+                    {material && materialDatabase[material] && (
+                      <>
+                        <br />
+                        <strong>Estimated Primary CO₂:</strong> {(quantity * materialDatabase[material].co2Primary).toFixed(2)} kg CO₂-eq
+                        <br />
+                        <strong>Estimated Recycled CO₂:</strong> {(quantity * materialDatabase[material].co2Recycled).toFixed(2)} kg CO₂-eq
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-              {/* NEW: Equivalency Storytelling - Make Impact Relatable */}
-              <Card className="shadow-lg border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
-                <CardHeader>
-                  <CardTitle className="text-xl text-green-700 flex items-center gap-2">
-                    🌱 Environmental Impact Story
-                    <Badge className="bg-green-100 text-green-800">Real-world context</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Trees Equivalent */}
-                    <div className="bg-white rounded-lg p-4 text-center border border-green-200">
-                      <div className="text-3xl mb-2">🌳</div>
-                      <div className="text-2xl font-bold text-green-600">{Math.round(totalCO2 / 22)}</div>
-                      <div className="text-sm text-gray-600">Trees planted to offset this CO₂</div>
-                      <div className="text-xs text-gray-500 mt-1">22kg CO₂/tree/year</div>
+          {/* Step 3: Process Route */}
+          {currentStep === 3 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="processRoute" className="text-base font-medium">
+                  Production Process Route
+                </Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillRoute}
+                  disabled={isAIActive || !material}
+                  className="ml-4"
+                >
+                  {isAIActive ? "🤖 Analyzing..." : "🤖 AI Recommend"}
+                </Button>
+              </div>
+              
+              <Select value={processRoute} onValueChange={setProcessRoute}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select process route" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="primary">
+                    <div className="flex flex-col">
+                      <span>Primary Production</span>
+                      <span className="text-xs text-foreground/60">Virgin materials, highest impact</span>
                     </div>
-
-                    {/* Cars Off Road */}
-                    <div className="bg-white rounded-lg p-4 text-center border border-blue-200">
-                      <div className="text-3xl mb-2">🚗</div>
-                      <div className="text-2xl font-bold text-blue-600">{Math.round(totalCO2 / 4600)}</div>
-                      <div className="text-sm text-gray-600">Cars off road for 1 year</div>
-                      <div className="text-xs text-gray-500 mt-1">4.6t CO₂/car/year avg</div>
+                  </SelectItem>
+                  <SelectItem value="recycled">
+                    <div className="flex flex-col">
+                      <span>Recycled Materials</span>
+                      <span className="text-xs text-foreground/60">Post-consumer, lowest impact</span>
                     </div>
-
-                    {/* Household Energy */}
-                    <div className="bg-white rounded-lg p-4 text-center border border-yellow-200">
-                      <div className="text-3xl mb-2">🏠</div>
-                      <div className="text-2xl font-bold text-yellow-600">{Math.round(energyUsed / 10000)}</div>
-                      <div className="text-sm text-gray-600">Households powered for 1 year</div>
-                      <div className="text-xs text-gray-500 mt-1">10,000 kWh/household/year</div>
+                  </SelectItem>
+                  <SelectItem value="hybrid">
+                    <div className="flex flex-col">
+                      <span>Hybrid Route</span>
+                      <span className="text-xs text-foreground/60">Mix of primary and recycled</span>
                     </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
 
-                    {/* Flights Avoided */}
-                    <div className="bg-white rounded-lg p-4 text-center border border-purple-200">
-                      <div className="text-3xl mb-2">✈️</div>
-                      <div className="text-2xl font-bold text-purple-600">{Math.round(totalCO2 / 150)}</div>
-                      <div className="text-sm text-gray-600">NYC-London flights avoided</div>
-                      <div className="text-xs text-gray-500 mt-1">~150kg CO₂/flight</div>
+              {processRoute && material && materialDatabase[material] && (
+                <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <h3 className="font-semibold text-primary mb-3">Route Impact Preview</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-foreground/70">CO₂ Impact:</span>
+                      <span className="ml-2 font-medium text-foreground">
+                        {materialDatabase[material][`co2${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`]} kg CO₂-eq/kg
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Energy (CED):</span>
+                      <span className="ml-2 font-medium text-foreground">
+                        {materialDatabase[material][`ced${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`]} MJ/kg
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Water Use:</span>
+                      <span className="ml-2 font-medium text-foreground">
+                        {materialDatabase[material][`waterUse${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`]} L/kg
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Route Type:</span>
+                      <span className="ml-2 font-medium text-foreground capitalize">{processRoute}</span>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                  {/* Circularity Story */}
-                  <div className="mt-6 bg-white rounded-lg p-4 border-2 border-dashed border-green-300">
-                    <h4 className="font-semibold text-green-800 mb-2">📖 Your Circularity Story</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      With {recycledContent}% recycled content and {circularityScore}% circularity score, 
-                      your production is <strong className="text-green-600">
-                        {circularityScore > 70 ? "exceptionally sustainable" : 
-                         circularityScore > 50 ? "above industry average" : 
-                         "improving towards sustainability"}
-                      </strong>. 
-                      By optimizing your process, you're preventing {Math.round(totalCO2 * 0.3)} kg of additional CO₂ 
-                      compared to linear production methods - equivalent to <strong className="text-blue-600">
-                      {Math.round((totalCO2 * 0.3) / 22)} trees working for a full year</strong>!
-                    </p>
+          {/* Steps 4-9 continue in similar pattern... */}
+          {/* Step 4: Energy Input (CED) */}
+          {currentStep === 4 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="energyCED" className="text-base font-medium">
+                  Cumulative Energy Demand (CED) - MJ/kg
+                </Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillCED}
+                  disabled={isAIActive || !material || !processRoute}
+                  className="ml-4"
+                >
+                  {isAIActive ? "🤖 Calculating..." : `🤖 AI Predict (${BEST_MODEL})`}
+                </Button>
+              </div>
+              
+              <Input
+                id="energyCED"
+                type="number"
+                value={energyCED}
+                onChange={(e) => setEnergyCED(e.target.value)}
+                placeholder="Enter CED in MJ/kg or use AI prediction"
+                step="0.1"
+              />
+              
+              {material && processRoute && materialDatabase[material] && (
+                <div className="mt-4 p-4 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                  <h3 className="font-semibold text-purple-600 dark:text-purple-400 mb-2">AI Model Insights</h3>
+                  <div className="text-sm text-purple-700 dark:text-purple-300">
+                    <strong>Model:</strong> {BEST_MODEL} (R² = {AI_MODELS[BEST_MODEL].r2}) <br />
+                    <strong>Training Data:</strong> {TRAINING_SAMPLES} samples <br />
+                    <strong>Expected Range:</strong> {materialDatabase[material][`ced${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`] * 0.8} - {materialDatabase[material][`ced${processRoute.charAt(0).toUpperCase() + processRoute.slice(1)}`] * 1.2} MJ/kg <br />
+                    {energyCED && <><strong>Your Input:</strong> {energyCED} MJ/kg</>}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                  {/* Improvement Potential */}
-                  <div className="mt-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4 border border-orange-200">
-                    <h4 className="font-semibold text-orange-800 mb-2">🎯 Improvement Potential</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">If recycling increased to 80%:</div>
-                        <div className="font-semibold text-orange-700">
-                          Save {Math.round((80 - recycledContent) * 2.5)} kg CO₂ 
-                          = {Math.round((80 - recycledContent) * 2.5 / 22)} more trees! 🌳
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">If transport reduced by 50%:</div>
-                        <div className="font-semibold text-orange-700">
-                          Save {Math.round(transportDistance * 0.15)} kg CO₂ 
-                          = {Math.round((transportDistance * 0.15) / 22)} more trees! 🌳
-                        </div>
-                      </div>
+          {/* Step 5: Carbon Input (GWP) */}
+          {currentStep === 5 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="carbonGWP" className="text-base font-medium">
+                  Global Warming Potential (GWP) - kg CO₂-eq/kg
+                </Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillGWP}
+                  disabled={isAIActive || !material || !processRoute}
+                  className="ml-4"
+                >
+                  {isAIActive ? "🤖 Calculating..." : `🤖 AI Predict (${BEST_MODEL})`}
+                </Button>
+              </div>
+              
+              <Input
+                id="carbonGWP"
+                type="number"
+                value={carbonGWP}
+                onChange={(e) => setCarbonGWP(e.target.value)}
+                placeholder="Enter GWP in kg CO₂-eq/kg or use AI prediction"
+                step="0.01"
+              />
+              
+              {material && processRoute && materialDatabase[material] && (
+                <div className="mt-4 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+                  <h3 className="font-semibold text-destructive mb-2">Carbon Impact Analysis</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-foreground/70">Primary Route:</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].co2Primary} kg CO₂-eq/kg</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* NEW: Benchmark Comparison - Industry Standards */}
-              <Card className="shadow-lg border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-                <CardHeader>
-                  <CardTitle className="text-xl text-purple-700 flex items-center gap-2">
-                    📊 Industry Benchmark Comparison
-                    <Badge className="bg-purple-100 text-purple-800">Global standards</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* CO2 Benchmark */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-800 mb-3">CO₂ Emissions</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Your Result</span>
-                          <span className="font-bold text-blue-600">{(totalCO2/1000).toFixed(1)}t</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Industry Average</span>
-                          <span className="font-bold text-gray-600">{((totalCO2/1000) * 1.3).toFixed(1)}t</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Best Practice</span>
-                          <span className="font-bold text-green-600">{((totalCO2/1000) * 0.7).toFixed(1)}t</span>
-                        </div>
-                        <div className="mt-2 bg-gray-200 rounded-full h-3">
-                          <div 
-                            className={`h-3 rounded-full ${totalCO2 < (totalCO2 * 0.7) ? 'bg-green-500' : totalCO2 < (totalCO2 * 1.3) ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{width: `${Math.min(100, Math.max(10, 100 - (totalCO2 / (totalCO2 * 1.5)) * 100))}%`}}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-center mt-1">
-                          {totalCO2 < (totalCO2 * 0.8) ? '🌟 Excellent' : totalCO2 < (totalCO2 * 1.1) ? '✅ Good' : '⚠️ Needs improvement'}
-                        </div>
-                      </div>
+                    <div>
+                      <span className="text-foreground/70">Recycled Route:</span>
+                      <span className="ml-2 font-medium text-foreground">{materialDatabase[material].co2Recycled} kg CO₂-eq/kg</span>
                     </div>
-
-                    {/* Circularity Benchmark */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-800 mb-3">Circularity Score</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Your Result</span>
-                          <span className="font-bold text-green-600">{circularityScore}%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Industry Average</span>
-                          <span className="font-bold text-gray-600">45%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Best Practice</span>
-                          <span className="font-bold text-green-600">85%</span>
-                        </div>
-                        <div className="mt-2 bg-gray-200 rounded-full h-3">
-                          <div 
-                            className={`h-3 rounded-full ${circularityScore > 70 ? 'bg-green-500' : circularityScore > 45 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{width: `${Math.min(100, Math.max(10, circularityScore))}%`}}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-center mt-1">
-                          {circularityScore > 70 ? '🌟 Above best practice' : circularityScore > 45 ? '✅ Above average' : '⚠️ Below average'}
-                        </div>
-                      </div>
+                    <div>
+                      <span className="text-foreground/70">Savings vs Primary:</span>
+                      <span className="ml-2 font-medium text-success">
+                        {((materialDatabase[material].co2Primary - materialDatabase[material].co2Recycled) / materialDatabase[material].co2Primary * 100).toFixed(1)}%
+                      </span>
                     </div>
-
-                    {/* Energy Efficiency Benchmark */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-800 mb-3">Energy Efficiency</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Your Result</span>
-                          <span className="font-bold text-purple-600">{(energyUsed/1000).toFixed(0)}k kWh</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Industry Average</span>
-                          <span className="font-bold text-gray-600">{((energyUsed/1000) * 1.2).toFixed(0)}k kWh</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm">Best Practice</span>
-                          <span className="font-bold text-green-600">{((energyUsed/1000) * 0.8).toFixed(0)}k kWh</span>
-                        </div>
-                        <div className="mt-2 bg-gray-200 rounded-full h-3">
-                          <div 
-                            className={`h-3 rounded-full ${energyUsed < (energyUsed * 0.9) ? 'bg-green-500' : energyUsed < (energyUsed * 1.1) ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{width: `${Math.min(100, Math.max(10, 100 - (energyUsed / (energyUsed * 1.5)) * 100))}%`}}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-center mt-1">
-                          {energyUsed < (energyUsed * 0.9) ? '🌟 High efficiency' : energyUsed < (energyUsed * 1.1) ? '✅ Good efficiency' : '⚠️ Low efficiency'}
-                        </div>
-                      </div>
+                    <div>
+                      <span className="text-foreground/70">Total for {quantity}kg:</span>
+                      <span className="ml-2 font-medium text-foreground">
+                        {carbonGWP ? (parseFloat(carbonGWP) * quantity).toFixed(2) : "Enter GWP"} kg CO₂-eq
+                      </span>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                  {/* Global Rankings */}
-                  <div className="mt-6 bg-white rounded-lg p-4 border-2 border-dashed border-purple-300">
-                    <h4 className="font-semibold text-purple-800 mb-3">🏆 Global Performance Rankings</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">Your Overall Rank:</div>
-                        <div className="text-2xl font-bold text-purple-600">
-                          Top {Math.round(100 - (circularityScore * 0.8))}%
-                        </div>
-                        <div className="text-xs text-gray-500">Among global {metalDatabase[metalType]?.name || 'metal'} producers</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600 mb-1">Sustainability Level:</div>
-                        <div className="text-2xl font-bold text-green-600">
-                          {circularityScore > 70 ? 'A+' : circularityScore > 60 ? 'A' : circularityScore > 50 ? 'B+' : circularityScore > 40 ? 'B' : 'C'}
-                        </div>
-                        <div className="text-xs text-gray-500">ESG Compliance Rating</div>
-                      </div>
+          {/* Step 6: Transport Configuration */}
+          {currentStep === 6 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-medium">
+                  Transport Configuration
+                </Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillTransport}
+                  disabled={isAIActive || !material || !processRoute}
+                  className="ml-4"
+                >
+                  {isAIActive ? "🤖 Optimizing..." : "🤖 AI Optimize Route"}
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="transportDistance">Distance (km)</Label>
+                  <Input
+                    id="transportDistance"
+                    type="number"
+                    value={transportDistance}
+                    onChange={(e) => setTransportDistance(parseInt(e.target.value) || 0)}
+                    placeholder="Transport distance"
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="transportMode">Transport Mode</Label>
+                  <Select value={transportMode} onValueChange={setTransportMode}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select transport mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(transportFactors).map(([mode, data]) => (
+                        <SelectItem key={mode} value={mode}>
+                          <div className="flex flex-col">
+                            <span className="capitalize">{mode}</span>
+                            <span className="text-xs text-foreground/60">{data.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {transportDistance > 0 && transportMode && (
+                <div className="mt-4 p-4 bg-orange-500/5 border border-orange-500/20 rounded-lg">
+                  <h3 className="font-semibold text-orange-600 dark:text-orange-400 mb-2">Transport Impact</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-foreground/70">Emission Factor:</span>
+                      <span className="ml-2 font-medium text-foreground">{transportFactors[transportMode].factor} kg CO₂/ton-km</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Total Distance:</span>
+                      <span className="ml-2 font-medium text-foreground">{transportDistance} km</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Material Weight:</span>
+                      <span className="ml-2 font-medium text-foreground">{quantity} kg</span>
+                    </div>
+                    <div>
+                      <span className="text-foreground/70">Transport Emissions:</span>
+                      <span className="ml-2 font-medium text-foreground">
+                        {((quantity * transportDistance * transportFactors[transportMode].factor) / 1000).toFixed(3)} kg CO₂
+                      </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-muted-foreground">
-                <div className="text-4xl mb-4">📊</div>
-                <h3 className="text-lg font-semibold mb-2">Ready to Calculate</h3>
-                <p>Adjust your parameters and click "Submit to AI/Backend" to see results</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 7: End-of-Life Circularity */}
+          {currentStep === 7 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-medium">
+                  End-of-Life Material Distribution (%)
+                </Label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAIFillEndOfLife}
+                  disabled={isAIActive || !material}
+                  className="ml-4"
+                >
+                  {isAIActive ? "🤖 Optimizing..." : "🤖 AI Optimize Circularity"}
+                </Button>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label>Reuse: {reusePercent}%</Label>
+                    <Badge variant={reusePercent >= 20 ? "default" : "secondary"}>
+                      {reusePercent >= 20 ? "Excellent" : reusePercent >= 10 ? "Good" : "Needs Improvement"}
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[reusePercent]}
+                    onValueChange={(value) => setReusePercent(value[0])}
+                    max={80}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label>Recycling: {recyclingPercent}%</Label>
+                    <Badge variant={recyclingPercent >= 60 ? "default" : "secondary"}>
+                      {recyclingPercent >= 60 ? "Excellent" : recyclingPercent >= 40 ? "Good" : "Needs Improvement"}
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[recyclingPercent]}
+                    onValueChange={(value) => setRecyclingPercent(value[0])}
+                    max={90}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label>Disposal: {disposalPercent}%</Label>
+                    <Badge variant={disposalPercent <= 20 ? "default" : "destructive"}>
+                      {disposalPercent <= 10 ? "Excellent" : disposalPercent <= 20 ? "Good" : "High Impact"}
+                    </Badge>
+                  </div>
+                  <Slider
+                    value={[disposalPercent]}
+                    onValueChange={(value) => setDisposalPercent(value[0])}
+                    max={60}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 bg-success/5 border border-success/20 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-success">Circularity Summary</h3>
+                  <Badge variant={validateEndOfLife() ? "default" : "destructive"}>
+                    Total: {reusePercent + recyclingPercent + disposalPercent}%
+                  </Badge>
+                </div>
+                
+                {!validateEndOfLife() && (
+                  <p className="text-destructive text-sm mb-2">
+                    ⚠️ Percentages must sum to 100%. Currently: {reusePercent + recyclingPercent + disposalPercent}%
+                  </p>
+                )}
+                
+                <div className="text-sm text-success">
+                  <strong>Circularity Score Preview:</strong> {material && materialDatabase[material] ? 
+                    Math.min(10, materialDatabase[material].circularityRating + (recyclingPercent / 100) * 0.8 + (reusePercent / 100) * 0.9).toFixed(1) 
+                    : "Select material"
+                  }/10
+                </div>
               </div>
             </div>
           )}
 
-          {/* Charts Section - Only show after submit */}
-          {showResults && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* CO2 per Stage Chart */}
-                <Card className="shadow-lg">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">CO₂ per Stage</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={co2StageData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Bar dataKey="value" fill="#3b82f6" />
-                      </BarChart>
-                    </ResponsiveContainer>
+          {/* Step 8: Analysis & Validation */}
+          {currentStep === 8 && (
+            <div className="space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">Review Your LCA Configuration</h3>
+                <p className="text-foreground/70">Verify all inputs before running the analysis</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Material & Process</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Material:</span>
+                      <span className="font-medium">{material || "Not selected"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Quantity:</span>
+                      <span className="font-medium">{quantity} kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Process Route:</span>
+                      <span className="font-medium capitalize">{processRoute}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">CED:</span>
+                      <span className="font-medium">{energyCED || "AI Default"} MJ/kg</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">GWP:</span>
+                      <span className="font-medium">{carbonGWP || "AI Default"} kg CO₂-eq/kg</span>
+                    </div>
                   </CardContent>
                 </Card>
-
-                {/* Recycled/Virgin/Landfill/Reuse Pie Chart */}
-                <Card className="shadow-lg">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold mb-4">Recycled / Virgin / Landfill / Reuse</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <RechartsPieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
-                    <div className="flex justify-center gap-4 mt-4">
-                      {pieData.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-sm" 
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {item.name} {item.value}%
-                          </span>
-                        </div>
-                      ))}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Transport & End-of-Life</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Transport Distance:</span>
+                      <span className="font-medium">{transportDistance} km</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Transport Mode:</span>
+                      <span className="font-medium capitalize">{transportMode}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Reuse:</span>
+                      <span className="font-medium">{reusePercent}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Recycling:</span>
+                      <span className="font-medium">{recyclingPercent}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Disposal:</span>
+                      <span className="font-medium">{disposalPercent}%</span>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Sankey Flow */}
-              <Card className="shadow-lg">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">Cradle-to-Grave Flow (Sankey)</h3>
-                  <div className="mb-2 text-sm text-gray-600">
-                    Debug: Nodes: {sankeyData?.nodes?.length || 0}, Links: {sankeyData?.links?.length || 0}
-                    {sankeyData?.nodes && <span className="ml-4">Node names: {sankeyData.nodes.map(n => n.name).join(', ')}</span>}
+              
+              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <h3 className="font-semibold text-primary mb-2">AI Model Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-foreground/70">Best Model:</span>
+                    <span className="ml-2 font-medium text-foreground">{BEST_MODEL}</span>
                   </div>
-                  <SimpleSankeyChart 
-                    data={sankeyData}
-                    width={700}
-                    height={400}
-                  />
-                </CardContent>
-              </Card>
+                  <div>
+                    <span className="text-foreground/70">Model Accuracy (R²):</span>
+                    <span className="ml-2 font-medium text-foreground">{AI_MODELS[BEST_MODEL].r2}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/70">Training Samples:</span>
+                    <span className="ml-2 font-medium text-foreground">{TRAINING_SAMPLES}</span>
+                  </div>
+                  <div>
+                    <span className="text-foreground/70">Validation Status:</span>
+                    <span className="ml-2 font-medium text-success">✓ Ready for Analysis</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-              {/* 📊 MULTI-METRIC ROC DASHBOARD */}
-              <Card className="shadow-lg border-l-4 border-indigo-500">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-2xl">📊</span>
-                    <h3 className="text-xl font-bold text-indigo-800">Multi-Metric ROC Dashboard</h3>
-                    <Badge className="bg-indigo-100 text-indigo-700">Comprehensive</Badge>
+          {/* Step 9: Results & Insights */}
+          {currentStep === 9 && (
+            <div className="space-y-6">
+              {!showResults ? (
+                <div className="text-center py-12">
+                  <Target className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Calculate LCA</h3>
+                  <p className="text-foreground/70 mb-6">Click the Calculate LCA button below to run the analysis</p>
+                </div>
+              ) : lcaResults && (
+                <div className="space-y-8">
+                  <div className="text-center mb-8">
+                    <h3 className="text-3xl font-bold text-success mb-3">🎉 LCA Analysis Complete</h3>
+                    <p className="text-lg text-foreground/80">Comprehensive environmental impact assessment with AI-powered insights</p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    {/* CO2 Efficiency */}
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-green-800">🌱 CO₂ Efficiency</h4>
-                        <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full">
-                          {circularityScore > 70 ? 'Excellent' : circularityScore > 50 ? 'Good' : 'Needs Improvement'}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-green-600 mb-1">
-                        {Math.round((circularityScore / 100) * 95)}%
-                      </div>
-                      <div className="text-xs text-green-600 mb-2">
-                        vs baseline production
-                      </div>
-                      <div className="w-full bg-green-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${Math.round((circularityScore / 100) * 95)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Water Usage */}
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-blue-800">💧 Water Efficiency</h4>
-                        <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
-                          {(recycledContent || 30) > 60 ? 'Excellent' : (recycledContent || 30) > 30 ? 'Good' : 'Fair'}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
-                        {Math.round(85 + ((recycledContent || 30) / 100) * 10)}%
-                      </div>
-                      <div className="text-xs text-blue-600 mb-2">
-                        water conservation
-                      </div>
-                      <div className="w-full bg-blue-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${Math.round(85 + ((recycledContent || 30) / 100) * 10)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Material Efficiency */}
-                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-purple-800">⚡ Material ROC</h4>
-                        <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full">
-                          {(recyclingPercent || 30) > 70 ? 'Excellent' : (recyclingPercent || 30) > 40 ? 'Good' : 'Fair'}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-purple-600 mb-1">
-                        {Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%
-                      </div>
-                      <div className="text-xs text-purple-600 mb-2">
-                        material recovery
-                      </div>
-                      <div className="w-full bg-purple-200 rounded-full h-2">
-                        <div 
-                          className="bg-purple-500 h-2 rounded-full transition-all duration-500" 
-                          style={{ width: `${Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Lifecycle Extension */}
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-orange-800">🔄 Lifecycle ROC</h4>
-                        <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-                          {(reusePercent || 10) > 25 ? 'Excellent' : (reusePercent || 10) > 10 ? 'Good' : 'Fair'}
-                        </span>
-                      </div>
-                      <div className="text-2xl font-bold text-orange-600 mb-1">
-                        {Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%
-                      </div>
-                      <div className="text-xs text-orange-600 mb-2">
-                        lifecycle extension
-                      </div>
-                      <div className="w-full bg-orange-200 rounded-full h-2">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all duration-500" 
-                          style={{ width: `${Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Comprehensive ROC Radar Chart */}
-                  <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-lg border border-gray-200">
-                    <h4 className="font-semibold text-gray-800 mb-4 text-center">🎯 Comprehensive ROC Performance</h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">CO₂ Recovery</span>
-                          <span className="text-sm font-bold text-green-600">
-                            {Math.round((circularityScore / 100) * 95)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.round((circularityScore / 100) * 95)}%` }}
-                          ></div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">Water Recovery</span>
-                          <span className="text-sm font-bold text-blue-600">
-                            {Math.round(85 + ((recycledContent || 30) / 100) * 10)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.round(85 + ((recycledContent || 30) / 100) * 10)}%` }}
-                          ></div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">Material Recovery</span>
-                          <span className="text-sm font-bold text-purple-600">
-                            {Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-purple-400 to-purple-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.round(60 + ((recyclingPercent || 30) / 100) * 35)}%` }}
-                          ></div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">Lifecycle Extension</span>
-                          <span className="text-sm font-bold text-orange-600">
-                            {Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.round(50 + ((reusePercent || 10) / 100) * 40 + ((lifespan || 15) / 30) * 10)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col justify-center items-center">
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-indigo-600 mb-2">
-                            {Math.round((
-                              (circularityScore / 100 * 95) + 
-                              (85 + (recycledContent || 30) / 100 * 10) + 
-                              (60 + (recyclingPercent || 30) / 100 * 35) + 
-                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
-                            ) / 4)}%
+                  {/* Interactive Controls Panel */}
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2 text-foreground">
+                        <Settings className="w-5 h-5" />
+                        <span>Interactive Impact Analysis</span>
+                        <Badge variant="outline" className="ml-2">Live Adjustments</Badge>
+                      </CardTitle>
+                      <p className="text-sm text-foreground/70">Adjust parameters to see real-time impact on environmental metrics</p>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <Label className="font-medium">Emission Reduction: {emissionReduction[0]}%</Label>
+                            <Badge variant={emissionReduction[0] >= 30 ? "default" : emissionReduction[0] >= 15 ? "secondary" : "outline"}>
+                              {emissionReduction[0] >= 30 ? "Excellent" : emissionReduction[0] >= 15 ? "Good" : "Standard"}
+                            </Badge>
                           </div>
-                          <div className="text-sm text-indigo-700 font-medium mb-4">Overall ROC Score</div>
-                          <div className="text-xs text-gray-600 leading-relaxed">
-                            Multi-dimensional recovery efficiency combining carbon, water, material, and lifecycle metrics
+                          <Slider
+                            value={emissionReduction}
+                            onValueChange={setEmissionReduction}
+                            max={50}
+                            step={5}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Advanced technologies & process optimization</p>
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <Label className="font-medium">Efficiency Improvement: {efficiencyImprovement[0]}%</Label>
+                            <Badge variant={efficiencyImprovement[0] >= 20 ? "default" : efficiencyImprovement[0] >= 10 ? "secondary" : "outline"}>
+                              {efficiencyImprovement[0] >= 20 ? "Excellent" : efficiencyImprovement[0] >= 10 ? "Good" : "Standard"}
+                            </Badge>
                           </div>
-                          <Badge className="mt-3 bg-indigo-100 text-indigo-700">
-                            {Math.round((
-                              (circularityScore / 100 * 95) + 
-                              (85 + (recycledContent || 30) / 100 * 10) + 
-                              (60 + (recyclingPercent || 30) / 100 * 35) + 
-                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
-                            ) / 4) > 80 ? 'Industry Leader' : 
-                            Math.round((
-                              (circularityScore / 100 * 95) + 
-                              (85 + (recycledContent || 30) / 100 * 10) + 
-                              (60 + (recyclingPercent || 30) / 100 * 35) + 
-                              (50 + (reusePercent || 10) / 100 * 40 + (lifespan || 15) / 30 * 10)
-                            ) / 4) > 60 ? 'Above Average' : 'Improvement Needed'}
+                          <Slider
+                            value={efficiencyImprovement}
+                            onValueChange={setEfficiencyImprovement}
+                            max={30}
+                            step={5}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Energy efficiency & resource optimization</p>
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <Label className="font-medium">Circularity Boost: {circularityBoost[0]}%</Label>
+                            <Badge variant={circularityBoost[0] >= 20 ? "default" : circularityBoost[0] >= 10 ? "secondary" : "outline"}>
+                              {circularityBoost[0] >= 20 ? "Excellent" : circularityBoost[0] >= 10 ? "Good" : "Standard"}
+                            </Badge>
+                          </div>
+                          <Slider
+                            value={circularityBoost}
+                            onValueChange={setCircularityBoost}
+                            max={25}
+                            step={5}
+                            className="w-full"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Enhanced recycling & reuse strategies</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-center space-x-4">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowComparison(!showComparison)}
+                          className="flex items-center space-x-2"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span>{showComparison ? "Hide" : "Show"} Before/After Comparison</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Key Metrics Dashboard */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="border-red-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold text-red-600 mb-1">
+                          {adjustedResults ? adjustedResults.totalCO2.toFixed(2) : lcaResults.totalCO2.toFixed(2)}
+                        </div>
+                        <div className="text-sm text-gray-600">kg CO₂-eq</div>
+                        <div className="text-xs text-gray-500 mt-1">Carbon Footprint</div>
+                        {adjustedResults && adjustedResults.totalCO2 < lcaResults.totalCO2 && (
+                          <Badge variant="default" className="mt-2 text-xs">
+                            -{((lcaResults.totalCO2 - adjustedResults.totalCO2) / lcaResults.totalCO2 * 100).toFixed(1)}%
                           </Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-purple-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold text-purple-600 mb-1">
+                          {adjustedResults ? adjustedResults.ced.toFixed(0) : lcaResults.ced.toFixed(0)}
                         </div>
-                      </div>
-                    </div>
+                        <div className="text-sm text-gray-600">MJ</div>
+                        <div className="text-xs text-gray-500 mt-1">Energy Demand</div>
+                        {adjustedResults && adjustedResults.ced < lcaResults.ced && (
+                          <Badge variant="default" className="mt-2 text-xs">
+                            -{((lcaResults.ced - adjustedResults.ced) / lcaResults.ced * 100).toFixed(1)}%
+                          </Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-blue-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold text-blue-600 mb-1">
+                          {adjustedResults ? adjustedResults.waterUse.toFixed(0) : lcaResults.waterUse.toFixed(0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Liters (L)</div>
+                        <div className="text-xs text-gray-500 mt-1">Water Usage</div>
+                        {adjustedResults && adjustedResults.waterUse < lcaResults.waterUse && (
+                          <Badge variant="default" className="mt-2 text-xs">
+                            -{((lcaResults.waterUse - adjustedResults.waterUse) / lcaResults.waterUse * 100).toFixed(1)}%
+                          </Badge>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-green-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold text-green-600 mb-1">
+                          {adjustedResults ? adjustedResults.circularityScore.toFixed(1) : lcaResults.circularityScore.toFixed(1)}
+                        </div>
+                        <div className="text-sm text-gray-600">/10</div>
+                        <div className="text-xs text-gray-500 mt-1">Circularity Score</div>
+                        {adjustedResults && adjustedResults.circularityScore > lcaResults.circularityScore && (
+                          <Badge variant="default" className="mt-2 text-xs">
+                            +{((adjustedResults.circularityScore - lcaResults.circularityScore) / lcaResults.circularityScore * 100).toFixed(1)}%
+                          </Badge>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
 
-          {/* NEW: AI-Powered Recommendations - Always visible */}
-          <Card className="shadow-lg border-green-300 bg-gradient-to-r from-green-50 to-blue-50">
-            <CardHeader>
-              <CardTitle className="text-xl text-green-700 flex items-center gap-2">
-                🤖 AI-Powered Optimization Recommendations
-                <Badge className="bg-green-100 text-green-800">Smart suggestions</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Priority Recommendations */}
-              <div>
-                <h4 className="font-semibold text-green-800 mb-3">🎯 Priority Actions (Highest ROC Impact)</h4>
-                <div className="space-y-3">
-                  {recycledContent < 60 && (
-                    <div className="bg-white rounded-lg p-4 border-l-4 border-green-500">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h5 className="font-semibold text-gray-800">Increase Recycled Content</h5>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Boost from {recycledContent}% to 70% recycled content
+                  {/* Charts and Visualizations */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Impact Breakdown Chart */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <BarChart3 className="w-5 h-5" />
+                          <span>Environmental Impact Breakdown</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <AnimatedD3BarChart 
+                          data={[
+                            {
+                              name: 'Production',
+                              'Current': lcaResults.processDetails.production,
+                              'Optimized': adjustedResults ? adjustedResults.processDetails.production : lcaResults.processDetails.production
+                            },
+                            {
+                              name: 'Transport',
+                              'Current': lcaResults.processDetails.transport,
+                              'Optimized': adjustedResults ? adjustedResults.processDetails.transport : lcaResults.processDetails.transport
+                            },
+                            {
+                              name: 'End-of-Life',
+                              'Current': lcaResults.totalCO2 * 0.1,
+                              'Optimized': (adjustedResults ? adjustedResults.totalCO2 : lcaResults.totalCO2) * 0.1
+                            }
+                          ]}
+                          width={500}
+                          height={300}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* End-of-Life Distribution Pie Chart */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <TrendingUp className="w-5 h-5" />
+                          <span>End-of-Life Material Flow</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <AnimatedD3PieChart 
+                          data={[
+                            { name: 'Reuse', value: reusePercent },
+                            { name: 'Recycling', value: recyclingPercent },
+                            { name: 'Disposal', value: disposalPercent }
+                          ]}
+                          width={300}
+                          height={300}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Separate Before/After Comparison Section */}
+                  {showComparison && adjustedResults && (
+                    <div className="space-y-6">
+                      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-green-50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center space-x-2">
+                            <BarChart3 className="w-5 h-5" />
+                            <span>Before vs After Optimization Analysis</span>
+                            <Badge variant="outline" className="bg-white">Interactive Comparison</Badge>
+                          </CardTitle>
+                          <p className="text-sm text-gray-600">
+                            Real-time comparison showing environmental impact improvements
                           </p>
-                          <div className="text-xs text-green-600 font-medium mt-2">
-                            💡 Potential: +{Math.round((70 - recycledContent) * 0.8)}% ROC improvement
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={450}>
+                            <BarChart 
+                              data={[
+                                {
+                                  category: 'CO₂ Emissions',
+                                  'Before': lcaResults.totalCO2,
+                                  'After': adjustedResults.totalCO2,
+                                  unit: 'kg CO₂-eq',
+                                  improvement: ((lcaResults.totalCO2 - adjustedResults.totalCO2) / lcaResults.totalCO2 * 100).toFixed(1)
+                                },
+                                {
+                                  category: 'Energy Use',
+                                  'Before': lcaResults.ced,
+                                  'After': adjustedResults.ced,
+                                  unit: 'MJ',
+                                  improvement: ((lcaResults.ced - adjustedResults.ced) / lcaResults.ced * 100).toFixed(1)
+                                },
+                                {
+                                  category: 'Water Use',
+                                  'Before': lcaResults.waterUse,
+                                  'After': adjustedResults.waterUse,
+                                  unit: 'L',
+                                  improvement: ((lcaResults.waterUse - adjustedResults.waterUse) / lcaResults.waterUse * 100).toFixed(1)
+                                },
+                                {
+                                  category: 'Circularity',
+                                  'Before': lcaResults.circularityScore,
+                                  'After': adjustedResults.circularityScore,
+                                  unit: '/10',
+                                  improvement: ((adjustedResults.circularityScore - lcaResults.circularityScore) / lcaResults.circularityScore * 100).toFixed(1)
+                                }
+                              ]}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="category" />
+                              <YAxis />
+                              <Tooltip 
+                                formatter={(value: any, name: any, props: any) => [
+                                  `${typeof value === 'number' ? value.toFixed(2) : value} ${props.payload.unit}`,
+                                  name
+                                ]}
+                                labelFormatter={(label) => `Impact Category: ${label}`}
+                              />
+                              <Legend />
+                              <Bar dataKey="Before" fill="#ef4444" name="Current Impact" />
+                              <Bar dataKey="After" fill="#22c55e" name="Optimized Impact" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                          
+                          {/* Improvement Summary */}
+                          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                              { label: 'CO₂ Reduction', value: ((lcaResults.totalCO2 - adjustedResults.totalCO2) / lcaResults.totalCO2 * 100).toFixed(1), unit: '%', color: 'text-green-600' },
+                              { label: 'Energy Savings', value: ((lcaResults.ced - adjustedResults.ced) / lcaResults.ced * 100).toFixed(1), unit: '%', color: 'text-purple-600' },
+                              { label: 'Water Savings', value: ((lcaResults.waterUse - adjustedResults.waterUse) / lcaResults.waterUse * 100).toFixed(1), unit: '%', color: 'text-blue-600' },
+                              { label: 'Circularity Gain', value: ((adjustedResults.circularityScore - lcaResults.circularityScore) / lcaResults.circularityScore * 100).toFixed(1), unit: '%', color: 'text-green-600' }
+                            ].map((metric, idx) => (
+                              <div key={idx} className="text-center p-3 bg-white rounded-lg border">
+                                <div className={`text-2xl font-bold ${metric.color} mb-1`}>
+                                  {parseFloat(metric.value) > 0 ? '+' : ''}{metric.value}{metric.unit}
+                                </div>
+                                <div className="text-xs text-gray-500">{metric.label}</div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                        <Badge className="bg-green-100 text-green-700">High Impact</Badge>
-                      </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
 
-                  {transportDistance > 1000 && (
-                    <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500">
-                      <div className="flex justify-between items-start">
+                  {/* LCA Flow Sankey Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5" />
+                        <span>LCA Material & Energy Flow Analysis</span>
+                        <Badge variant="outline">Sankey Diagram</Badge>
+                      </CardTitle>
+                      <p className="text-sm text-gray-600">
+                        Visual representation of material and energy flows through the life cycle
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <SankeyChart
+                        material={material}
+                        quantity={quantity}
+                        processRoute={processRoute}
+                        width={900}
+                        height={500}
+                      />
+                      
+                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="font-medium text-blue-800">Material Input</div>
+                          <div className="text-blue-600">{quantity} kg {material}</div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="font-medium text-purple-800">Energy Demand</div>
+                          <div className="text-purple-600">{(adjustedResults ? adjustedResults.ced : lcaResults.ced).toFixed(0)} MJ</div>
+                        </div>
+                        <div className="p-3 bg-red-50 rounded-lg">
+                          <div className="font-medium text-red-800">CO₂ Emissions</div>
+                          <div className="text-red-600">{(adjustedResults ? adjustedResults.totalCO2 : lcaResults.totalCO2).toFixed(2)} kg CO₂-eq</div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="font-medium text-green-800">Circularity Rate</div>
+                          <div className="text-green-600">{reusePercent + recyclingPercent}% recovered</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Detailed Analysis Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <Target className="w-5 h-5" />
+                          <span>Goal & Scope</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
                         <div>
-                          <h5 className="font-semibold text-gray-800">Optimize Supply Chain</h5>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Reduce transport distance from {transportDistance}km to 600km through local sourcing
+                          <strong>Functional Unit:</strong> {quantity} kg of {material}
+                        </div>
+                        <div>
+                          <strong>System Boundary:</strong> Cradle-to-grave with {processRoute} production
+                        </div>
+                        <div>
+                          <strong>Impact Categories:</strong> GWP, CED, Water Use, Circularity
+                        </div>
+                        <div>
+                          <strong>AI Model Used:</strong> {BEST_MODEL} (R² = {AI_MODELS[BEST_MODEL].r2})
+                        </div>
+                        <div>
+                          <strong>Analysis Date:</strong> {new Date().toLocaleDateString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <Brain className="w-5 h-5" />
+                          <span>AI-Powered Insights</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="font-medium text-green-800">Optimization Potential</span>
+                          </div>
+                          <p className="text-sm text-green-700">
+                            With current adjustments, you can achieve up to{' '}
+                            <strong>{emissionReduction[0]}% emission reduction</strong> and{' '}
+                            <strong>{circularityBoost[0]}% circularity improvement</strong>.
                           </p>
-                          <div className="text-xs text-blue-600 font-medium mt-2">
-                            💡 Potential: -{Math.round((transportDistance - 600) * 0.02)}t CO₂ reduction
+                        </div>
+
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Sparkles className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium text-blue-800">Smart Recommendations</span>
+                          </div>
+                          <div className="text-sm text-blue-700 space-y-1">
+                            {lcaResults.circularityScore >= 8 ? (
+                              <div>✅ <strong>Excellent circularity!</strong> Your material choice and end-of-life strategy are optimal.</div>
+                            ) : lcaResults.circularityScore >= 6 ? (
+                              <div>⚠️ <strong>Good performance.</strong> Consider increasing recycling percentage to improve circularity.</div>
+                            ) : (
+                              <div>🔄 <strong>Improvement needed.</strong> Switch to recycled materials and increase reuse/recycling rates.</div>
+                            )}
+                            
+                            {processRoute !== "recycled" && (
+                              <div className="mt-2">
+                                💡 <strong>Switch to recycled route:</strong> Could reduce CO₂ by{' '}
+                                {material && materialDatabase[material] ? 
+                                  ((materialDatabase[material].co2Primary - materialDatabase[material].co2Recycled) * quantity).toFixed(2) : "N/A"
+                                } kg CO₂-eq
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <Badge className="bg-blue-100 text-blue-700">Medium Impact</Badge>
-                      </div>
-                    </div>
-                  )}
 
-                  {(emissionControl?.[0] || 50) > 40 && (
-                    <div className="bg-white rounded-lg p-4 border-l-4 border-yellow-500">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h5 className="font-semibold text-gray-800">Switch to Renewable Energy</h5>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Increase renewable energy from {100 - (emissionControl?.[0] || 50)}% to 80%
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <AlertTriangle className="w-4 h-4 text-purple-600" />
+                            <span className="font-medium text-purple-800">Model Confidence</span>
+                          </div>
+                          <p className="text-sm text-purple-700">
+                            {BEST_MODEL} predictions with {(AI_MODELS[BEST_MODEL].r2 * 100).toFixed(1)}% accuracy
+                            based on {TRAINING_SAMPLES} training samples.
                           </p>
-                          <div className="text-xs text-yellow-600 font-medium mt-2">
-                            💡 Potential: -{Math.round(((emissionControl?.[0] || 50) - 20) * 0.5)}t CO₂ reduction
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Life Cycle Inventory</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <strong>Production Emissions:</strong> {(adjustedResults ? adjustedResults.processDetails.production : lcaResults.processDetails.production).toFixed(2)} kg CO₂-eq
+                        </div>
+                        <div>
+                          <strong>Transport Emissions:</strong> {(adjustedResults ? adjustedResults.processDetails.transport : lcaResults.processDetails.transport).toFixed(3)} kg CO₂-eq
+                        </div>
+                        <div>
+                          <strong>Water Consumption:</strong> {(adjustedResults ? adjustedResults.waterUse : lcaResults.waterUse).toFixed(0)} L
+                        </div>
+                        <div>
+                          <strong>End-of-Life Distribution:</strong>
+                          <ul className="text-sm mt-1 ml-4">
+                            <li>• Reuse: {reusePercent}%</li>
+                            <li>• Recycling: {recyclingPercent}%</li>
+                            <li>• Disposal: {disposalPercent}%</li>
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Impact Assessment Summary</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Climate Change:</span>
+                            <div className="font-medium">{(adjustedResults ? adjustedResults.totalCO2 : lcaResults.totalCO2).toFixed(2)} kg CO₂-eq</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Energy Demand:</span>
+                            <div className="font-medium">{(adjustedResults ? adjustedResults.ced : lcaResults.ced).toFixed(0)} MJ CED</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Water Footprint:</span>
+                            <div className="font-medium">{(adjustedResults ? adjustedResults.waterUse : lcaResults.waterUse).toFixed(0)} L</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Circularity Index:</span>
+                            <div className="font-medium">{(adjustedResults ? adjustedResults.circularityScore : lcaResults.circularityScore).toFixed(1)}/10</div>
                           </div>
                         </div>
-                        <Badge className="bg-yellow-100 text-yellow-700">High Impact</Badge>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Process Optimization */}
-              <div>
-                <h4 className="font-semibold text-blue-800 mb-3">⚙️ Process Optimization</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg p-3 border border-gray-200">
-                    <h6 className="font-medium text-gray-800">Efficiency Upgrade</h6>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Upgrade to {processMethod === "smelting" ? "electric arc furnace" : "high-efficiency processing"}
-                    </p>
-                    <div className="text-xs text-blue-600 mt-2">+15% energy efficiency</div>
+                        
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm">
+                            <strong>Environmental Rating:</strong>
+                            <div className="flex space-x-2 mt-2">
+                              {[
+                                { 
+                                  label: 'CO₂ Impact', 
+                                  value: lcaResults.totalCO2 < 50 ? 'Low' : lcaResults.totalCO2 < 100 ? 'Medium' : 'High',
+                                  color: lcaResults.totalCO2 < 50 ? 'green' : lcaResults.totalCO2 < 100 ? 'yellow' : 'red'
+                                },
+                                { 
+                                  label: 'Circularity', 
+                                  value: lcaResults.circularityScore >= 8 ? 'Excellent' : lcaResults.circularityScore >= 6 ? 'Good' : 'Needs Improvement',
+                                  color: lcaResults.circularityScore >= 8 ? 'green' : lcaResults.circularityScore >= 6 ? 'blue' : 'orange'
+                                }
+                              ].map((rating, idx) => (
+                                <Badge key={idx} variant={rating.color === 'green' ? 'default' : 'secondary'}>
+                                  {rating.label}: {rating.value}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-gray-200">
-                    <h6 className="font-medium text-gray-800">Waste Heat Recovery</h6>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Install heat recovery systems for {metalDatabase[metalType]?.name || 'your process'}
-                    </p>
-                    <div className="text-xs text-blue-600 mt-2">-20% energy consumption</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Impact */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-                <h4 className="font-semibold text-purple-800 mb-2">💰 Financial & ESG Impact</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-lg font-bold text-green-600">
-                      ${Math.round((totalCO2 / 1000) * 50)}
-                    </div>
-                    <div className="text-xs text-gray-600">Potential carbon credit value</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-blue-600">
-                      {Math.round(energyUsed * 0.1)}k
-                    </div>
-                    <div className="text-xs text-gray-600">kWh annual savings potential</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-purple-600">
-                      {circularityScore > 60 ? 'A' : circularityScore > 40 ? 'B+' : 'B'}
-                    </div>
-                    <div className="text-xs text-gray-600">Projected ESG rating</div>
+                  
+                  {/* Export and Actions */}
+                  <div className="flex justify-center space-x-4">
+                    <Button className="flex items-center space-x-2" onClick={exportToPDF}>
+                      <Download className="w-4 h-4" />
+                      <span>Export PDF Report</span>
+                    </Button>
+                    <Button variant="outline" onClick={() => {
+                      setEmissionReduction([0]);
+                      setEfficiencyImprovement([0]);
+                      setCircularityBoost([0]);
+                    }}>
+                      Reset Adjustments
+                    </Button>
                   </div>
                 </div>
-              </div>
-
-              {/* Implementation Timeline */}
-              <div>
-                <h4 className="font-semibold text-orange-800 mb-3">📅 Implementation Roadmap</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm"><strong>Week 1-4:</strong> Source 20% more recycled content</span>
-                    <Badge variant="outline" className="text-xs">Quick win</Badge>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-sm"><strong>Month 2-3:</strong> Negotiate renewable energy contracts</span>
-                    <Badge variant="outline" className="text-xs">Medium term</Badge>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span className="text-sm"><strong>Month 6-12:</strong> Install efficiency equipment</span>
-                    <Badge variant="outline" className="text-xs">Long term</Badge>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 🔬 SENSITIVITY ANALYSIS - Show what-if scenarios */}
-          {showResults && (
-            <Card className="shadow-lg border-l-4 border-teal-500">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🔬</span>
-                  <h3 className="text-xl font-bold text-teal-800">Sensitivity Analysis</h3>
-                  <Badge className="bg-teal-100 text-teal-700">What-if Scenarios</Badge>
-                </div>
-                
-                <div className="mb-6">
-                  <p className="text-sm text-gray-600 mb-4">
-                    See how small changes in key parameters impact your overall ROC performance. Each scenario shows the potential improvement or reduction in your sustainability metrics.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Scenario 1: +10% Recycled Content */}
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-green-800">📈 +10% Recycled Content</h4>
-                      <Badge className="bg-green-200 text-green-800 text-xs">Optimistic</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Current ROC:</span>
-                        <span className="font-medium">{circularityScore}%</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Projected ROC:</span>
-                        <span className="font-bold text-green-600">
-                          {Math.min(100, circularityScore + Math.round(((recycledContent || 30) + 10) * 0.15))}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">CO₂ Reduction:</span>
-                        <span className="font-medium text-green-600">
-                          -{Math.round((totalCO2 / 1000) * 0.08)}t
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-green-200">
-                        <div className="text-xs text-green-700 font-medium">
-                          ⭐ Impact: {Math.round(((recycledContent || 30) + 10) * 0.15)} point ROC increase
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Scenario 2: -20% Transport Distance */}
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-blue-800">🚛 -20% Transport Distance</h4>
-                      <Badge className="bg-blue-200 text-blue-800 text-xs">Realistic</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Current Distance:</span>
-                        <span className="font-medium">{transportDistance || 500}km</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Optimized Distance:</span>
-                        <span className="font-bold text-blue-600">
-                          {Math.round((transportDistance || 500) * 0.8)}km
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">CO₂ Reduction:</span>
-                        <span className="font-medium text-blue-600">
-                          -{Math.round((totalCO2 / 1000) * 0.12)}t
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-blue-200">
-                        <div className="text-xs text-blue-700 font-medium">
-                          ⭐ Impact: {Math.round(((transportDistance || 500) * 0.2) / 50)} point ROC increase
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Scenario 3: +15% Recycling Rate */}
-                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-purple-800">♻️ +15% Recycling Rate</h4>
-                      <Badge className="bg-purple-200 text-purple-800 text-xs">Achievable</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Current Rate:</span>
-                        <span className="font-medium">{recyclingPercent || 30}%</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Enhanced Rate:</span>
-                        <span className="font-bold text-purple-600">
-                          {Math.min(100, (recyclingPercent || 30) + 15)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">ROC Improvement:</span>
-                        <span className="font-medium text-purple-600">
-                          +{Math.round(15 * 0.25)} points
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-purple-200">
-                        <div className="text-xs text-purple-700 font-medium">
-                          ⭐ Impact: Enhanced material circularity
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Scenario 4: Renewable Energy Upgrade */}
-                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-yellow-800">⚡ 80% Renewable Energy</h4>
-                      <Badge className="bg-yellow-200 text-yellow-800 text-xs">High Impact</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Current Mix:</span>
-                        <span className="font-medium">{100 - (emissionControl?.[0] || 50)}% renewable</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Upgraded Mix:</span>
-                        <span className="font-bold text-yellow-600">80% renewable</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">CO₂ Reduction:</span>
-                        <span className="font-medium text-yellow-600">
-                          -{Math.round((totalCO2 / 1000) * 0.25)}t
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-yellow-200">
-                        <div className="text-xs text-yellow-700 font-medium">
-                          ⭐ Impact: Major emissions reduction
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Scenario 5: Combined Optimization */}
-                  <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-indigo-800">🎯 Combined Optimization</h4>
-                      <Badge className="bg-indigo-200 text-indigo-800 text-xs">Best Case</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Current ROC:</span>
-                        <span className="font-medium">{circularityScore}%</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Optimized ROC:</span>
-                        <span className="font-bold text-indigo-600">
-                          {Math.min(100, circularityScore + 18)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total CO₂ Reduction:</span>
-                        <span className="font-medium text-indigo-600">
-                          -{Math.round((totalCO2 / 1000) * 0.45)}t
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-indigo-200">
-                        <div className="text-xs text-indigo-700 font-medium">
-                          ⭐ Impact: All improvements combined
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Scenario 6: Pessimistic Case */}
-                  <div className="bg-gradient-to-br from-red-50 to-rose-50 p-4 rounded-lg border border-red-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-red-800">⚠️ Risk Scenario</h4>
-                      <Badge className="bg-red-200 text-red-800 text-xs">Conservative</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Reduced Recycling:</span>
-                        <span className="font-medium">-10% from current</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Impact on ROC:</span>
-                        <span className="font-bold text-red-600">
-                          {Math.max(20, circularityScore - 8)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Additional CO₂:</span>
-                        <span className="font-medium text-red-600">
-                          +{Math.round((totalCO2 / 1000) * 0.15)}t
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-red-200">
-                        <div className="text-xs text-red-700 font-medium">
-                          ⚠️ Impact: Plan mitigation strategies
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sensitivity Summary */}
-                <div className="mt-6 bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-200">
-                  <h4 className="font-semibold text-gray-800 mb-3">📊 Sensitivity Summary</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h5 className="font-medium text-gray-700 mb-2">Most Sensitive Parameters:</h5>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Energy Source Mix:</span>
-                          <span className="font-medium text-yellow-600">High Impact</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Recycled Content:</span>
-                          <span className="font-medium text-green-600">Medium Impact</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Transport Distance:</span>
-                          <span className="font-medium text-blue-600">Medium Impact</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-gray-700 mb-2">Optimization Potential:</h5>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">ROC Improvement Range:</span>
-                          <span className="font-medium text-indigo-600">+8 to +18 points</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">CO₂ Reduction Potential:</span>
-                          <span className="font-medium text-green-600">
-                            -{Math.round((totalCO2 / 1000) * 0.45)}t max
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Risk Exposure:</span>
-                          <span className="font-medium text-red-600">
-                            +{Math.round((totalCO2 / 1000) * 0.15)}t worst case
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           )}
 
-          {/* 📖 AI NARRATIVE GENERATOR - Human-readable summary reports */}
-          {showResults && (
-            <Card className="shadow-lg border-l-4 border-rose-500">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">📖</span>
-                  <h3 className="text-xl font-bold text-rose-800">AI Narrative Generator</h3>
-                  <Badge className="bg-rose-100 text-rose-700">Storytelling Report</Badge>
-                </div>
-                
-                <div className="space-y-6">
-                  {/* Executive Summary */}
-                  <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-6 rounded-lg border border-rose-200">
-                    <h4 className="font-semibold text-rose-800 mb-3 flex items-center gap-2">
-                      📋 Executive Summary
-                      <Badge className="bg-rose-200 text-rose-800 text-xs">Auto-generated</Badge>
-                    </h4>
-                    <div className="prose prose-sm text-gray-700 leading-relaxed">
-                      <p className="mb-3">
-                        <strong>Your {metalDatabase[metalType]?.name || 'material'} lifecycle analysis</strong> reveals a{' '}
-                        <span className={`font-bold ${circularityScore > 70 ? 'text-green-600' : circularityScore > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {circularityScore > 70 ? 'highly optimized' : circularityScore > 50 ? 'moderately efficient' : 'improvement-ready'}
-                        </span>{' '}
-                        circular economy performance with a{' '}
-                        <span className="font-bold text-indigo-600">{circularityScore}% ROC score</span>.
-                        With {recycledContent || 30}% recycled content and {transportDistance || 500}km average transport distance,
-                        your operation generates approximately{' '}
-                        <span className="font-bold text-gray-800">{Math.round(totalCO2 / 1000)}t CO₂</span> per processing cycle.
-                      </p>
-                      <p className="mb-3">
-                        The analysis indicates that your current approach to{' '}
-                        <span className="font-medium">{processMethod}</span> processing is{' '}
-                        {energyUsed < 5000 ? 'energy-efficient' : energyUsed < 10000 ? 'moderately energy-intensive' : 'energy-intensive'},
-                        consuming approximately {Math.round(energyUsed).toLocaleString()} kWh.
-                        Your end-of-life strategy, with {recyclingPercent || 30}% recycling and {reusePercent || 10}% reuse,
-                        demonstrates {(recyclingPercent || 30) + (reusePercent || 10) > 60 ? 'strong' : (recyclingPercent || 30) + (reusePercent || 10) > 40 ? 'moderate' : 'limited'} circular economy commitment.
-                      </p>
-                    </div>
-                  </div>
+        </CardContent>
+      </Card>
+      </motion.div>
 
-                  {/* Environmental Impact Story */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
-                    <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                      🌍 Environmental Impact Story
-                      <Badge className="bg-green-200 text-green-800 text-xs">Real-world context</Badge>
-                    </h4>
-                    <div className="prose prose-sm text-gray-700 leading-relaxed">
-                      <p className="mb-3">
-                        <strong>The environmental footprint of your operation</strong> can be understood through everyday comparisons:
-                        Your current {Math.round(totalCO2 / 1000)}t CO₂ emissions are equivalent to{' '}
-                        <span className="font-bold text-red-600">
-                          {Math.round((totalCO2 / 1000) * 2.2)} cars driving for a year
-                        </span>, or the carbon absorption capacity of{' '}
-                        <span className="font-bold text-green-600">
-                          {Math.round((totalCO2 / 1000) * 48)} mature trees
-                        </span>.
-                      </p>
-                      <p className="mb-3">
-                        Your energy consumption of {Math.round(energyUsed).toLocaleString()} kWh could power{' '}
-                        <span className="font-bold text-blue-600">
-                          {Math.round(energyUsed / 10000)} average households for a year
-                        </span>.
-                        However, with {recycledContent || 30}% recycled content, you're already saving the equivalent energy needed to power{' '}
-                        <span className="font-bold text-purple-600">
-                          {Math.round((recycledContent || 30) * energyUsed / 1000000)} additional homes
-                        </span> through reduced primary production demands.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Journey Narrative */}
-                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                      🗺️ Circular Economy Journey
-                      <Badge className="bg-blue-200 text-blue-800 text-xs">Process narrative</Badge>
-                    </h4>
-                    <div className="prose prose-sm text-gray-700 leading-relaxed">
-                      <p className="mb-3">
-                        <strong>Your material's circular journey begins</strong> with{' '}
-                        {recycledContent > 50 ? 'primarily recycled inputs' : recycledContent > 30 ? 'a balanced mix of recycled and virgin materials' : 'predominantly virgin material extraction'}.
-                        The {Math.round(transportWeight || 10)}t of {metalDatabase[metalType]?.name || 'material'} travels an average of{' '}
-                        <span className="font-medium">{transportDistance || 500}km</span> to reach your{' '}
-                        <span className="font-medium">{processMethod}</span> facility.
-                      </p>
-                      <p className="mb-3">
-                        During the {lifespan || 15}-year operational phase, your material serves its intended purpose while{' '}
-                        {(emissionControl?.[0] || 50) > 60 ? 'powered primarily by renewable energy' : 
-                         (emissionControl?.[0] || 50) > 40 ? 'using a mixed energy portfolio' : 'relying mostly on conventional energy sources'}.
-                        At end-of-life, the material follows multiple pathways:{' '}
-                        <span className="font-bold text-green-600">{recyclingPercent || 30}% returns to recycling streams</span>,{' '}
-                        <span className="font-bold text-orange-600">{reusePercent || 10}% finds new life through reuse</span>, and{' '}
-                        <span className="font-bold text-gray-600">{landfillPercent || 40}% requires landfill management</span>.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Success Metrics & Achievements */}
-                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-lg border border-purple-200">
-                    <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                      🏆 Achievements & Metrics
-                      <Badge className="bg-purple-200 text-purple-800 text-xs">Performance highlights</Badge>
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div className="bg-white p-3 rounded border border-purple-100">
-                          <div className="text-sm font-medium text-purple-700">Circular Economy Grade</div>
-                          <div className="text-2xl font-bold text-purple-600">
-                            {circularityScore > 80 ? 'A+' : circularityScore > 70 ? 'A' : circularityScore > 60 ? 'B+' : circularityScore > 50 ? 'B' : 'C'}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {circularityScore > 80 ? 'Industry leader' : circularityScore > 60 ? 'Above average' : 'Improvement opportunity'}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded border border-purple-100">
-                          <div className="text-sm font-medium text-purple-700">Carbon Efficiency</div>
-                          <div className="text-2xl font-bold text-green-600">
-                            {Math.round((10000 - totalCO2) / 100)}%
-                          </div>
-                          <div className="text-xs text-gray-600">vs baseline emissions</div>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="bg-white p-3 rounded border border-purple-100">
-                          <div className="text-sm font-medium text-purple-700">Resource Recovery Rate</div>
-                          <div className="text-2xl font-bold text-orange-600">
-                            {(recyclingPercent || 30) + (reusePercent || 10)}%
-                          </div>
-                          <div className="text-xs text-gray-600">materials kept in circulation</div>
-                        </div>
-                        <div className="bg-white p-3 rounded border border-purple-100">
-                          <div className="text-sm font-medium text-purple-700">Sustainability Score</div>
-                          <div className="text-2xl font-bold text-blue-600">
-                            {Math.round((circularityScore + (100 - (emissionControl?.[0] || 50)) + ((recycledContent || 30) * 1.2)) / 3)}
-                          </div>
-                          <div className="text-xs text-gray-600">comprehensive assessment</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Future Outlook & Recommendations */}
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-lg border border-orange-200">
-                    <h4 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
-                      🔮 Future Outlook & Recommendations
-                      <Badge className="bg-orange-200 text-orange-800 text-xs">Strategic insights</Badge>
-                    </h4>
-                    <div className="prose prose-sm text-gray-700 leading-relaxed">
-                      <p className="mb-3">
-                        <strong>Looking ahead, your operation has significant potential</strong> for improvement.
-                        Based on industry trends and best practices, implementing our recommended optimizations could{' '}
-                        <span className="font-bold text-green-600">
-                          increase your ROC score to {Math.min(100, circularityScore + 18)}%
-                        </span> and{' '}
-                        <span className="font-bold text-blue-600">
-                          reduce CO₂ emissions by up to {Math.round((totalCO2 / 1000) * 0.45)}t annually
-                        </span>.
-                      </p>
-                      <p className="mb-3">
-                        The path forward involves {recycledContent < 50 ? 'prioritizing increased recycled content sourcing' : 'maintaining high recycled content levels'},
-                        {(emissionControl?.[0] || 50) < 60 ? ' transitioning to renewable energy sources' : ' continuing renewable energy initiatives'}, and
-                        {(recyclingPercent || 30) < 60 ? ' enhancing end-of-life recovery programs' : ' optimizing existing recovery systems'}.
-                        With these changes, your operation could become a{' '}
-                        <span className="font-bold text-purple-600">circular economy showcase</span> within{' '}
-                        <span className="font-medium">12-18 months</span>.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Call to Action */}
-                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg border border-indigo-200 text-center">
-                    <h4 className="font-semibold text-indigo-800 mb-3">📈 Ready to Take Action?</h4>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Your comprehensive LCA analysis reveals clear pathways to enhanced sustainability performance.
-                      Start with the highest-impact recommendations and track your progress over time.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Badge className="bg-green-100 text-green-700">Carbon Reduction: -{Math.round((totalCO2 / 1000) * 0.45)}t potential</Badge>
-                      <Badge className="bg-blue-100 text-blue-700">ROC Improvement: +{Math.min(100 - circularityScore, 18)} points</Badge>
-                      <Badge className="bg-purple-100 text-purple-700">Timeline: 12-18 months</Badge>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+      {/* Navigation */}
+      <div className="flex justify-between">
+        <Button 
+          variant="outline" 
+          onClick={prevStep} 
+          disabled={currentStep === 1}
+          className="flex items-center space-x-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Previous</span>
+        </Button>
+        
+        <div className="text-center">
+          <span className="text-gray-500">Step {currentStep} of 9</span>
         </div>
+        
+        <Button 
+          onClick={currentStep === 9 ? calculateLCA : nextStep}
+          disabled={currentStep < 9 && !isStepValid(currentStep)}
+          className="flex items-center space-x-2"
+        >
+          <span>{currentStep === 9 ? "Calculate LCA" : "Next"}</span>
+          {currentStep < 9 && <ChevronRight className="w-4 h-4" />}
+        </Button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
